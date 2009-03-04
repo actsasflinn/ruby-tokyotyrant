@@ -174,6 +174,9 @@ static VALUE cTable_put_method(VALUE self, VALUE vpkey, VALUE vcols, int method)
     case 2 :
       res = tcrdbtblputcat(db, RSTRING_PTR(vpkey), RSTRING_LEN(vpkey), cols);
       break;
+    default :
+      res = false;
+      break;
   }
 
   if (!res) {
@@ -198,6 +201,7 @@ static VALUE cTable_putcat(VALUE self, VALUE vpkey, VALUE vcols) {
 }
 
 static VALUE cTable_out(VALUE self, VALUE vpkey) {
+  TCRDB *db;
   Data_Get_Struct(rb_iv_get(self, "@connection"), TCRDB, db);
   vpkey = StringValueEx(vpkey);
 
@@ -217,12 +221,39 @@ static VALUE cTable_get(VALUE self, VALUE vpkey) {
   return vcols;
 }
 
+static VALUE cTable_setindex(VALUE self, VALUE vname, VALUE vtype){
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(self, "@connection"), TCRDB, db);
+  Check_Type(vname, T_STRING);
+  return tcrdbtblsetindex(db, RSTRING_PTR(vname), NUM2INT(vtype)) ? Qtrue : Qfalse;
+}
+
+static VALUE cTable_genuid(VALUE self){
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(self, "@connection"), TCRDB, db);
+  return LL2NUM(tcrdbtblgenuid(db));
+}
+
 void Init_tokyo_tyrant() {
   mTokyoTyrant = rb_define_module("TokyoTyrant");
 
   eTokyoTyrantError = rb_define_class("TokyoTyrantError", rb_eStandardError);
-
   cTable = rb_define_class_under(mTokyoTyrant, "Table", rb_cObject);
+
+  rb_define_const(cTable, "ESUCCESS", INT2NUM(TTESUCCESS));
+  rb_define_const(cTable, "EINVALID", INT2NUM(TTEINVALID));
+  rb_define_const(cTable, "ENOHOST", INT2NUM(TTENOHOST));
+  rb_define_const(cTable, "EREFUSED", INT2NUM(TTEREFUSED));
+  rb_define_const(cTable, "ESEND", INT2NUM(TTESEND));
+  rb_define_const(cTable, "ERECV", INT2NUM(TTERECV));
+  rb_define_const(cTable, "EKEEP", INT2NUM(TTEKEEP));
+  rb_define_const(cTable, "ENOREC", INT2NUM(TTENOREC));
+  rb_define_const(cTable, "EMISC", INT2NUM(TTEMISC));
+
+  rb_define_const(cTable, "ITLEXICAL", INT2NUM(RDBITLEXICAL));
+  rb_define_const(cTable, "ITDECIMAL", INT2NUM(RDBITDECIMAL));
+  rb_define_const(cTable, "ITVOID", INT2NUM(RDBITVOID));
+  rb_define_const(cTable, "ITKEEP", INT2NUM(RDBITKEEP));
 
   rb_define_method(cTable, "initialize", cTable_initialize, 2);
   rb_define_method(cTable, "close", cTable_close, 0);
@@ -233,4 +264,6 @@ void Init_tokyo_tyrant() {
   rb_define_method(cTable, "out", cTable_out, 1);
   rb_define_method(cTable, "get", cTable_get, 1);
   rb_define_alias(cTable, "[]", "get");
+  rb_define_method(cTable, "setindex", cTable_setindex, 2);
+  rb_define_method(cTable, "genuid", cTable_genuid, 0);
 }
