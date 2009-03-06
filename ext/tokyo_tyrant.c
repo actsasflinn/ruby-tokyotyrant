@@ -178,6 +178,13 @@ static VALUE cDB_initialize(VALUE self, VALUE host, VALUE port) {
   return Qtrue;
 }
 
+static VALUE cDB_vanish(VALUE self){
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(self, "@connection"), TCRDB, db);
+  return tcrdbvanish(db) ? Qtrue : Qfalse;
+}
+
+
 static VALUE cTable;
 
 /* public function prototypes */
@@ -278,7 +285,7 @@ void Init_tokyo_tyrant() {
 
   eTokyoTyrantError = rb_define_class("TokyoTyrantError", rb_eStandardError);
   cDB = rb_define_class_under(mTokyoTyrant, "DB", rb_cObject);
-  cTable = rb_define_class_under(cDB, "Table", rb_cObject);
+  cTable = rb_define_class_under(mTokyoTyrant, "Table", cDB);
 
   rb_define_const(cDB, "ESUCCESS", INT2NUM(TTESUCCESS));
   rb_define_const(cDB, "EINVALID", INT2NUM(TTEINVALID));
@@ -295,7 +302,7 @@ void Init_tokyo_tyrant() {
   rb_define_const(cDB, "ITVOID", INT2NUM(RDBITVOID));
   rb_define_const(cDB, "ITKEEP", INT2NUM(RDBITKEEP));
 
-  rb_define_method(cDB, "initialize", cDB_initialize, -1);
+  rb_define_method(cDB, "initialize", cDB_initialize, 2);
   rb_define_method(cDB, "close", cDB_close, 0);
 /*
   rb_define_method(cDB, "errmsg", cDB_errmsg, 1);
@@ -312,11 +319,14 @@ void Init_tokyo_tyrant() {
   rb_define_method(cDB, "vsiz", cDB_vsiz, 2);
   rb_define_method(cDB, "iterinit", cDB_iterinit, 0);
   rb_define_method(cDB, "iternext", cDB_iternext, 0);
-  rb_define_method(cDB, "cDB_sync", cDB_sync, 0);
-  rb_define_method(cDB, "cDB_vanish", cDB_vanish, 0);
-  rb_define_method(cDB, "cDB_copy", cDB_copy, 1);
-  rb_define_method(cDB, "cDB_restore", cDB_restore, 2);
-  rb_define_method(cDB, "cDB_setmst", cDB_setmst, 2);
+  rb_define_method(cDB, "sync", cDB_sync, 0);
+*/
+  rb_define_method(cDB, "vanish", cDB_vanish, 0);
+  rb_define_alias(cDB, "clear", "vanish");
+/*
+  rb_define_method(cDB, "copy", cDB_copy, 1);
+  rb_define_method(cDB, "restore", cDB_restore, 2);
+  rb_define_method(cDB, "setmst", cDB_setmst, 2);
 */
 
   rb_define_method(cTable, "put", cTable_put, 2);

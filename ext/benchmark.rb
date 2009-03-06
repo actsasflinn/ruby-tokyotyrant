@@ -94,19 +94,20 @@ Benchmark.benchmark(' ' * 20 + Benchmark::Tms::CAPTION, 20) do |b|
   end
 end
 
-r.clear
+require 'tokyo_tyrant'
 t = TokyoTyrant::Table.new('127.0.0.1', 1978)
+t.clear
 
 2.times { puts }
 puts 'TokyoTyrant (C)'
 
 Benchmark.benchmark(' ' * 20 + Benchmark::Tms::CAPTION, 20) do |b|
   b.report('inserting data') do
-    data1.each_with_index { |e, i| t.put(i.to_s, e) }
+    data1.each_with_index { |e, i| t[i] = e }
   end
 
   b.report('reading data') do
-    data1.each_with_index { |e, i| nothing = t.get(i.to_s) }
+    data1.each_with_index { |e, i| nothing = t[i] }
   end
 end
 
