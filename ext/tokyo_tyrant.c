@@ -136,7 +136,7 @@ static VALUE cDB_vanish(VALUE self);
 static VALUE cDB_copy(VALUE self, VALUE path);
 static VALUE cDB_restore(VALUE self, VALUE path, uint64_t ts);
 static VALUE cDB_setmst(VALUE self, VALUE host, VALUE port);
-uint64_t cDB_rnum(VALUE self);
+static VALUE cDB_rnum(VALUE self);
 uint64_t cDB_size(VALUE self);
 char cDB_stat(VALUE self);
 TCLIST cDB_misc(VALUE self, VALUE name, int opts, const TCLIST *args);
@@ -184,6 +184,11 @@ static VALUE cDB_vanish(VALUE self){
   return tcrdbvanish(db) ? Qtrue : Qfalse;
 }
 
+static VALUE cDB_rnum(VALUE self){
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(self, "@connection"), TCRDB, db);
+  return LL2NUM(tcrdbrnum(db));
+}
 
 static VALUE cTable;
 
@@ -328,6 +333,7 @@ void Init_tokyo_tyrant() {
   rb_define_method(cDB, "restore", cDB_restore, 2);
   rb_define_method(cDB, "setmst", cDB_setmst, 2);
 */
+  rb_define_method(cDB, "rnum", cDB_rnum, 0);
 
   rb_define_method(cTable, "put", cTable_put, 2);
   rb_define_alias(cTable, "[]=", "put");
