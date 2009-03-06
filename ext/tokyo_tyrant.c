@@ -114,7 +114,7 @@ static VALUE maptovhash(TCMAP *map){
 static VALUE cDB;
 static VALUE cDB_errmsg(VALUE ecode);
 static VALUE cDB_initialize(VALUE self, VALUE host, VALUE port);
-static void cDB_free(VALUE self);
+static void cDB_free(TCRDB *db);
 static VALUE cDB_close(VALUE self);
 static VALUE cDB_ecode(VALUE self);
 static VALUE cDB_put(VALUE self, VALUE vpkey, VALUE vstr);
@@ -124,7 +124,7 @@ static VALUE cDB_putshl(VALUE self, VALUE vpkey, VALUE vstr);
 static VALUE cDB_putnr(VALUE self, VALUE vpkey, VALUE vstr);
 static VALUE cDB_out(VALUE self, VALUE vpkey);
 static VALUE cDB_get(VALUE self, VALUE keys);
-static VALUE cDB_vsiz2(VALUE self, VALUE vpkey);
+static VALUE cDB_vsiz(VALUE self, VALUE vpkey);
 static VALUE cDB_iterinit(VALUE self);
 static VALUE cDB_iternext(VALUE self);
 TCLIST cDB_fwmkeys(VALUE self, VALUE prefix, VALUE max);
@@ -141,28 +141,12 @@ uint64_t cDB_size(VALUE self);
 char cDB_stat(VALUE self);
 TCLIST cDB_misc(VALUE self, VALUE name, int opts, const TCLIST *args);
 
-static VALUE cTable;
-
-/* public function prototypes */
-static void cTable_free(TCRDB *db);
-static VALUE cTable_close(VALUE self);
-static VALUE cTable_initialize(VALUE self, VALUE host, VALUE port);
-static VALUE cTable_put_method(VALUE self, VALUE vpkey, VALUE vcols, int method);
-static VALUE cTable_put(VALUE self, VALUE vpkey, VALUE vcols);
-static VALUE cTable_putkeep(VALUE self, VALUE vpkey, VALUE vcols);
-static VALUE cTable_putcat(VALUE self, VALUE vpkey, VALUE vcols);
-static VALUE cTable_out(VALUE self, VALUE vpkey);
-static VALUE cTable_get(VALUE self, VALUE vpkey);
-static VALUE cTable_setindex(VALUE self, VALUE vname, VALUE vtype);
-static VALUE cTable_genuid(VALUE self);
-void Init_tokyo_tyrant();
-
-static void cTable_free(TCRDB *db) {
+static void cDB_free(TCRDB *db) {
   /* delete the object */
   tcrdbdel(db);
 }
 
-static VALUE cTable_close(VALUE self) {
+static VALUE cDB_close(VALUE self) {
   int ecode;
   TCRDB *db;
   Data_Get_Struct(rb_iv_get(self, "@connection"), TCRDB, db);
@@ -176,7 +160,7 @@ static VALUE cTable_close(VALUE self) {
   return Qtrue;
 }
 
-static VALUE cTable_initialize(VALUE self, VALUE host, VALUE port) {
+static VALUE cDB_initialize(VALUE self, VALUE host, VALUE port) {
   int ecode;
   TCRDB *db;
 
@@ -189,10 +173,23 @@ static VALUE cTable_initialize(VALUE self, VALUE host, VALUE port) {
 
   rb_iv_set(self, "@host", host);
   rb_iv_set(self, "@port", port);
-  rb_iv_set(self, "@connection", Data_Wrap_Struct(rb_cObject, 0, cTable_free, db));
+  rb_iv_set(self, "@connection", Data_Wrap_Struct(rb_cObject, 0, cDB_free, db));
 
   return Qtrue;
 }
+
+static VALUE cTable;
+
+/* public function prototypes */
+static VALUE cTable_put_method(VALUE self, VALUE vpkey, VALUE vcols, int method);
+static VALUE cTable_put(VALUE self, VALUE vpkey, VALUE vcols);
+static VALUE cTable_putkeep(VALUE self, VALUE vpkey, VALUE vcols);
+static VALUE cTable_putcat(VALUE self, VALUE vpkey, VALUE vcols);
+static VALUE cTable_out(VALUE self, VALUE vpkey);
+static VALUE cTable_get(VALUE self, VALUE vpkey);
+static VALUE cTable_setindex(VALUE self, VALUE vname, VALUE vtype);
+static VALUE cTable_genuid(VALUE self);
+void Init_tokyo_tyrant();
 
 static VALUE cTable_put_method(VALUE self, VALUE vpkey, VALUE vcols, int method) {
   int ecode;
@@ -300,6 +297,7 @@ void Init_tokyo_tyrant() {
 
   rb_define_method(cDB, "initialize", cDB_initialize, -1);
   rb_define_method(cDB, "close", cDB_close, 0);
+/*
   rb_define_method(cDB, "errmsg", cDB_errmsg, 1);
   rb_define_method(cDB, "ecode", cDB_ecode, 0);
   rb_define_method(cDB, "put", cDB_put, 2);
@@ -311,18 +309,16 @@ void Init_tokyo_tyrant() {
   rb_define_method(cDB, "out", cDB_out, 1);
   rb_define_method(cDB, "get", cDB_get, 1);
   rb_define_alias(cDB, "[]", "get");
-  rb_define_method(cDB, "vsiz", cDB_vsiz2, 2);
+  rb_define_method(cDB, "vsiz", cDB_vsiz, 2);
   rb_define_method(cDB, "iterinit", cDB_iterinit, 0);
   rb_define_method(cDB, "iternext", cDB_iternext, 0);
-
   rb_define_method(cDB, "cDB_sync", cDB_sync, 0);
   rb_define_method(cDB, "cDB_vanish", cDB_vanish, 0);
   rb_define_method(cDB, "cDB_copy", cDB_copy, 1);
   rb_define_method(cDB, "cDB_restore", cDB_restore, 2);
   rb_define_method(cDB, "cDB_setmst", cDB_setmst, 2);
+*/
 
-  rb_define_method(cTable, "initialize", cTable_initialize, -1);
-  rb_define_method(cTable, "close", cTable_close, 0);
   rb_define_method(cTable, "put", cTable_put, 2);
   rb_define_alias(cTable, "[]=", "put");
   rb_define_method(cTable, "putkeep", cTable_putkeep, 2);
