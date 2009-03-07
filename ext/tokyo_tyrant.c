@@ -5,7 +5,12 @@
 #include <locale.h>
 #include <tcrdb.h>
 
-#define NUMBUFSIZ      32
+#define RDBVNDATA "@rdb"
+#define NUMBUFSIZ 32
+#define TTPUT      0
+#define TTPUTKEEP  1
+#define TTPUTCAT   2
+#define TTPUTNR    3
 
 #if !defined(RSTRING_PTR)
 #define RSTRING_PTR(TC_s) (RSTRING(TC_s)->ptr)
@@ -17,12 +22,15 @@
 #define RARRAY_LEN(TC_a) (RARRAY(TC_a)->len)
 #endif
 
-#define TPUT 0;
-#define TPUTKEEP 1;
-#define TPUTCAT 2;
 
 static VALUE mTokyoTyrant;
 static VALUE eTokyoTyrantError;
+static VALUE cDB;
+static VALUE cTable;
+
+uint64_t cDB_size(VALUE vself);
+char cDB_stat(VALUE vself);
+TCLIST cDB_misc(VALUE vself, VALUE name, int opts, const TCLIST *args);
 
 /* private function prototypes */
 static VALUE StringValueEx(VALUE vobj);
@@ -111,48 +119,18 @@ static VALUE maptovhash(TCMAP *map){
   return vhash;
 }
 
-static VALUE cDB;
-static VALUE cDB_errmsg(VALUE ecode);
-static VALUE cDB_initialize(VALUE self, VALUE host, VALUE port);
-static void cDB_free(TCRDB *db);
-static VALUE cDB_close(VALUE self);
-static VALUE cDB_ecode(VALUE self);
-static VALUE cDB_put(VALUE self, VALUE vpkey, VALUE vstr);
-static VALUE cDB_putkeep(VALUE self, VALUE vpkey, VALUE vstr);
-static VALUE cDB_putcat(VALUE self, VALUE vpkey, VALUE vstr);
-static VALUE cDB_putshl(VALUE self, VALUE vpkey, VALUE vstr);
-static VALUE cDB_putnr(VALUE self, VALUE vpkey, VALUE vstr);
-static VALUE cDB_out(VALUE self, VALUE vpkey);
-static VALUE cDB_get(VALUE self, VALUE keys);
-static VALUE cDB_vsiz(VALUE self, VALUE vpkey);
-static VALUE cDB_iterinit(VALUE self);
-static VALUE cDB_iternext(VALUE self);
-TCLIST cDB_fwmkeys(VALUE self, VALUE prefix, VALUE max);
-int cDB_addint(VALUE self, const void *kbuf, int ksiz, int num);
-double cDB_adddouble(VALUE self, const void *kbuf, int ksiz, double num);
-void cDB_ext(VALUE self, VALUE name, int opts, const char *kstr, const char *vstr);
-static VALUE cDB_sync(VALUE self);
-static VALUE cDB_vanish(VALUE self);
-static VALUE cDB_copy(VALUE self, VALUE path);
-static VALUE cDB_restore(VALUE self, VALUE path, uint64_t ts);
-static VALUE cDB_setmst(VALUE self, VALUE host, VALUE port);
-static VALUE cDB_rnum(VALUE self);
-uint64_t cDB_size(VALUE self);
-char cDB_stat(VALUE self);
-TCLIST cDB_misc(VALUE self, VALUE name, int opts, const TCLIST *args);
-
-static void cDB_free(TCRDB *db) {
+static void cDB_free(TCRDB *db){
   /* delete the object */
   tcrdbdel(db);
 }
 
-static VALUE cDB_close(VALUE self) {
+static VALUE cDB_close(VALUE vself){
   int ecode;
   TCRDB *db;
-  Data_Get_Struct(rb_iv_get(self, "@connection"), TCRDB, db);
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
 
   /* close the connection */
-  if(!tcrdbclose(db)) {
+  if(!tcrdbclose(db)){
     ecode = tcrdbecode(db);
     rb_raise(eTokyoTyrantError, "close error: %s\n", tcrdberrmsg(ecode));
   }
@@ -160,9 +138,14 @@ static VALUE cDB_close(VALUE self) {
   return Qtrue;
 }
 
-static VALUE cDB_initialize(VALUE self, VALUE host, VALUE port) {
+static VALUE cDB_initialize(int argc, VALUE *argv, VALUE vself){
+  VALUE host, port;
   int ecode;
   TCRDB *db;
+
+  rb_scan_args(argc, argv, "11", &host, &port);
+  if(NIL_P(host)) host = rb_str_new2("127.0.0.1");
+  if(NIL_P(port)) port = INT2FIX(1978);
 
   db = tcrdbnew();
 
@@ -171,66 +154,278 @@ static VALUE cDB_initialize(VALUE self, VALUE host, VALUE port) {
     rb_raise(eTokyoTyrantError, "open error: %s\n", tcrdberrmsg(ecode));
   }
 
-  rb_iv_set(self, "@host", host);
-  rb_iv_set(self, "@port", port);
-  rb_iv_set(self, "@connection", Data_Wrap_Struct(rb_cObject, 0, cDB_free, db));
+  rb_iv_set(vself, "@host", host);
+  rb_iv_set(vself, "@port", port);
+  rb_iv_set(vself, RDBVNDATA, Data_Wrap_Struct(rb_cObject, 0, cDB_free, db));
 
   return Qtrue;
 }
 
-static VALUE cDB_vanish(VALUE self){
+static VALUE cDB_errmsg(int argc, VALUE *argv, VALUE vself){
+  VALUE vecode;
+  const char *msg;
+  int ecode;
   TCRDB *db;
-  Data_Get_Struct(rb_iv_get(self, "@connection"), TCRDB, db);
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  rb_scan_args(argc, argv, "01", &vecode);
+
+  ecode = (vecode == Qnil) ? tcrdbecode(db) : NUM2INT(vecode);
+  msg = tcrdberrmsg(ecode);
+  return rb_str_new2(msg);
+}
+
+static VALUE cDB_ecode(VALUE vself){
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  return INT2NUM(tcrdbecode(db));
+}
+
+static VALUE cDB_put_method(VALUE vself, VALUE vkey, VALUE vstr, int method){
+  int ecode;
+  bool res;
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  vkey = StringValueEx(vkey);
+  vstr = StringValueEx(vstr);
+
+  switch(method){
+    case TTPUT:
+      res = tcrdbput2(db, RSTRING_PTR(vkey), RSTRING_PTR(vstr));
+      break;
+    case TTPUTKEEP:
+      res = tcrdbputkeep2(db, RSTRING_PTR(vkey), RSTRING_PTR(vstr));
+      break;
+    case TTPUTCAT:
+      res = tcrdbputcat2(db, RSTRING_PTR(vkey), RSTRING_PTR(vstr));
+      break;
+    case TTPUTNR:
+      res = tcrdbputnr2(db, RSTRING_PTR(vkey), RSTRING_PTR(vstr));
+      break;
+    default:
+      res = false;
+      break;
+  }
+
+  if(!res){
+    ecode = tcrdbecode(db);
+    rb_raise(eTokyoTyrantError, "put error: %s\n", tcrdberrmsg(ecode));
+  }
+
+  return Qtrue;  
+}
+
+static VALUE cDB_put(VALUE vself, VALUE vkey, VALUE vstr){
+  return cDB_put_method(vself, vkey, vstr, TTPUT);
+}
+static VALUE cDB_putkeep(VALUE vself, VALUE vkey, VALUE vstr){
+  return cDB_put_method(vself, vkey, vstr, TTPUTKEEP);  
+}
+static VALUE cDB_putcat(VALUE vself, VALUE vkey, VALUE vstr){
+  return cDB_put_method(vself, vkey, vstr, TTPUTCAT);
+}
+static VALUE cDB_putnr(VALUE vself, VALUE vkey, VALUE vstr){
+  return cDB_put_method(vself, vkey, vstr, TTPUTNR);
+}
+
+static VALUE cDB_putshl(VALUE vself, VALUE vkey, VALUE vstr, VALUE vwidth){
+  int ecode;
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  vkey = StringValueEx(vkey);
+  vstr = StringValueEx(vstr);
+
+  if(!tcrdbputshl2(db, RSTRING_PTR(vkey), RSTRING_PTR(vstr), FIXNUM_P(vwidth))){
+    ecode = tcrdbecode(db);
+    rb_raise(eTokyoTyrantError, "put error: %s\n", tcrdberrmsg(ecode));
+  }
+
+  return Qtrue;
+}
+
+static VALUE cDB_out(VALUE vself, VALUE vkey){
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  vkey = StringValueEx(vkey);
+  return tcrdbout2(db, RSTRING_PTR(vkey)) ? Qtrue : Qfalse;
+}
+
+static VALUE cDB_get(VALUE vself, VALUE vkey){
+  VALUE vval;
+  char *vbuf;
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  vkey = StringValueEx(vkey);
+  if(!(vbuf = tcrdbget2(db, RSTRING_PTR(vkey)))) return Qnil;
+  vval = rb_str_new2(vbuf);
+  tcfree(vbuf);
+  return vval;
+}
+
+static VALUE cDB_vsiz(VALUE vself, VALUE vkey){
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  vkey = StringValueEx(vkey);
+  return INT2NUM(tcrdbvsiz2(db, RSTRING_PTR(vkey)));
+}
+
+static VALUE cDB_iterinit(VALUE vself){
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  return tcrdbiterinit(db) ? Qtrue : Qfalse;
+}
+
+static VALUE cDB_iternext(VALUE vself){
+  VALUE vval;
+  char *vbuf;
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  if(!(vbuf = tcrdbiternext2(db))) return Qnil;
+  vval = rb_str_new2(vbuf);
+  tcfree(vbuf);
+
+  return vval;
+}
+
+static VALUE cDB_fwmkeys(int argc, VALUE *argv, VALUE vself){
+  VALUE vprefix, vmax, vary;
+  TCLIST *keys;
+  int max;
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  rb_scan_args(argc, argv, "11", &vprefix, &vmax);
+
+  vprefix = StringValueEx(vprefix);
+  max = (vmax == Qnil) ? -1 : NUM2INT(vmax);
+  keys = tcrdbfwmkeys(db, RSTRING_PTR(vprefix), RSTRING_LEN(vprefix), max);
+  vary = listtovary(keys);
+  tclistdel(keys);
+  return vary;
+}
+
+static VALUE cDB_addint(VALUE vself, VALUE vkey, VALUE vnum){
+  int num;
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  vkey = StringValueEx(vkey);
+
+  num = tcrdbaddint(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), NUM2INT(vnum));
+  return num == INT_MIN ? Qnil : INT2NUM(num);
+}
+
+static VALUE cDB_adddouble(VALUE vself, VALUE vkey, VALUE vnum){
+  double num;
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  vkey = StringValueEx(vkey);
+  num = tcrdbadddouble(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), NUM2DBL(vnum));
+  return isnan(num) ? Qnil : rb_float_new(num);
+}
+
+static VALUE cDB_ext(int argc, VALUE *argv, VALUE vself){
+  const char *res;
+  VALUE vname, vkey, vvalue, vopts;
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  rb_scan_args(argc, argv, "11", &vname, &vkey, &vvalue, &vopts);
+
+  vname = StringValueEx(vname);
+  vkey = StringValueEx(vkey);
+  vvalue = StringValueEx(vvalue);
+  res = tcrdbext2(db, RSTRING_PTR(vname), FIXNUM_P(vopts), RSTRING_PTR(vkey), RSTRING_PTR(vvalue));
+  return rb_str_new2(res);
+}
+
+static VALUE cDB_sync(VALUE vself){
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  return tcrdbsync(db) ? Qtrue : Qfalse;
+}
+
+static VALUE cDB_vanish(VALUE vself){
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
   return tcrdbvanish(db) ? Qtrue : Qfalse;
 }
 
-static VALUE cDB_rnum(VALUE self){
+static VALUE cDB_copy(VALUE vself, VALUE path){
   TCRDB *db;
-  Data_Get_Struct(rb_iv_get(self, "@connection"), TCRDB, db);
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  Check_Type(path, T_STRING);
+  return tcrdbcopy(db, RSTRING_PTR(path)) ? Qtrue : Qfalse;
+}
+
+static VALUE cDB_restore(VALUE vself, VALUE path, uint64_t ts){
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  Check_Type(path, T_STRING);
+  return tcrdbrestore(db, RSTRING_PTR(path), ts) ? Qtrue : Qfalse;
+}
+
+static VALUE cDB_setmst(VALUE vself, VALUE host, VALUE port){
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  return tcrdbsetmst(db, StringValuePtr(host), FIX2INT(port)) ? Qtrue : Qfalse;
+}
+
+static VALUE cDB_rnum(VALUE vself){
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
   return LL2NUM(tcrdbrnum(db));
 }
 
-static VALUE cTable;
+static VALUE cDB_empty(VALUE vself){
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
 
-/* public function prototypes */
-static VALUE cTable_put_method(VALUE self, VALUE vpkey, VALUE vcols, int method);
-static VALUE cTable_put(VALUE self, VALUE vpkey, VALUE vcols);
-static VALUE cTable_putkeep(VALUE self, VALUE vpkey, VALUE vcols);
-static VALUE cTable_putcat(VALUE self, VALUE vpkey, VALUE vcols);
-static VALUE cTable_out(VALUE self, VALUE vpkey);
-static VALUE cTable_get(VALUE self, VALUE vpkey);
-static VALUE cTable_setindex(VALUE self, VALUE vname, VALUE vtype);
-static VALUE cTable_genuid(VALUE self);
-void Init_tokyo_tyrant();
+  return tcrdbrnum(db) < 1 ? Qtrue : Qfalse;
+}
 
-static VALUE cTable_put_method(VALUE self, VALUE vpkey, VALUE vcols, int method) {
+/* TABLE METHODS */
+
+static VALUE cTable_put_method(VALUE vself, VALUE vkey, VALUE vcols, int method){
   int ecode;
   bool res;
   TCMAP *cols;
   TCRDB *db;
-  Data_Get_Struct(rb_iv_get(self, "@connection"), TCRDB, db);
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
 
-  vpkey = StringValueEx(vpkey);
+  vkey = StringValueEx(vkey);
   Check_Type(vcols, T_HASH);
   cols = vhashtomap(vcols);
 
   // there's probably a more elegant way yo do this
-  switch(method) {
-    case 0 :
-      res = tcrdbtblput(db, RSTRING_PTR(vpkey), RSTRING_LEN(vpkey), cols);
+  switch(method){
+    case TTPUT:
+      res = tcrdbtblput(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), cols);
       break;
-    case 1 :
-      res = tcrdbtblputkeep(db, RSTRING_PTR(vpkey), RSTRING_LEN(vpkey), cols);
+    case TTPUTKEEP:
+      res = tcrdbtblputkeep(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), cols);
       break;
-    case 2 :
-      res = tcrdbtblputcat(db, RSTRING_PTR(vpkey), RSTRING_LEN(vpkey), cols);
+    case TTPUTCAT:
+      res = tcrdbtblputcat(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), cols);
       break;
     default :
       res = false;
       break;
   }
 
-  if (!res) {
+  if(!res){
     ecode = tcrdbecode(db);
     rb_raise(eTokyoTyrantError, "put error: %s\n", tcrdberrmsg(ecode));
   }
@@ -239,53 +434,53 @@ static VALUE cTable_put_method(VALUE self, VALUE vpkey, VALUE vcols, int method)
   return Qtrue;
 }
 
-static VALUE cTable_put(VALUE self, VALUE vpkey, VALUE vcols) {
-  return cTable_put_method(self, vpkey, vcols, 0);
+static VALUE cTable_put(VALUE vself, VALUE vkey, VALUE vcols){
+  return cTable_put_method(vself, vkey, vcols, TTPUT);
 }
 
-static VALUE cTable_putkeep(VALUE self, VALUE vpkey, VALUE vcols) {
-  return cTable_put_method(self, vpkey, vcols, 1);
+static VALUE cTable_putkeep(VALUE vself, VALUE vkey, VALUE vcols){
+  return cTable_put_method(vself, vkey, vcols, TTPUTKEEP);
 }
 
-static VALUE cTable_putcat(VALUE self, VALUE vpkey, VALUE vcols) {
-  return cTable_put_method(self, vpkey, vcols, 2);
+static VALUE cTable_putcat(VALUE vself, VALUE vkey, VALUE vcols){
+  return cTable_put_method(vself, vkey, vcols, TTPUTCAT);
 }
 
-static VALUE cTable_out(VALUE self, VALUE vpkey) {
+static VALUE cTable_out(VALUE vself, VALUE vkey){
   TCRDB *db;
-  Data_Get_Struct(rb_iv_get(self, "@connection"), TCRDB, db);
-  vpkey = StringValueEx(vpkey);
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  vkey = StringValueEx(vkey);
 
-  return tcrdbtblout(db, RSTRING_PTR(vpkey), RSTRING_LEN(vpkey));
+  return tcrdbtblout(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey));
 }
 
-static VALUE cTable_get(VALUE self, VALUE vpkey) {
+static VALUE cTable_get(VALUE vself, VALUE vkey){
   VALUE vcols;
   TCRDB *db;
   TCMAP *cols;
-  Data_Get_Struct(rb_iv_get(self, "@connection"), TCRDB, db);
-  vpkey = StringValueEx(vpkey);
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  vkey = StringValueEx(vkey);
 
-  if(!(cols = tcrdbtblget(db, RSTRING_PTR(vpkey), RSTRING_LEN(vpkey)))) return Qnil;
+  if(!(cols = tcrdbtblget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey)))) return Qnil;
   vcols = maptovhash(cols);
   tcmapdel(cols);
   return vcols;
 }
 
-static VALUE cTable_setindex(VALUE self, VALUE vname, VALUE vtype) {
+static VALUE cTable_setindex(VALUE vself, VALUE vname, VALUE vtype){
   TCRDB *db;
-  Data_Get_Struct(rb_iv_get(self, "@connection"), TCRDB, db);
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
   Check_Type(vname, T_STRING);
   return tcrdbtblsetindex(db, RSTRING_PTR(vname), NUM2INT(vtype)) ? Qtrue : Qfalse;
 }
 
-static VALUE cTable_genuid(VALUE self) {
+static VALUE cTable_genuid(VALUE vself){
   TCRDB *db;
-  Data_Get_Struct(rb_iv_get(self, "@connection"), TCRDB, db);
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
   return LL2NUM(tcrdbtblgenuid(db));
 }
 
-void Init_tokyo_tyrant() {
+void Init_tokyo_tyrant(){
   mTokyoTyrant = rb_define_module("TokyoTyrant");
 
   eTokyoTyrantError = rb_define_class("TokyoTyrantError", rb_eStandardError);
@@ -307,10 +502,9 @@ void Init_tokyo_tyrant() {
   rb_define_const(cDB, "ITVOID", INT2NUM(RDBITVOID));
   rb_define_const(cDB, "ITKEEP", INT2NUM(RDBITKEEP));
 
-  rb_define_method(cDB, "initialize", cDB_initialize, 2);
+  rb_define_method(cDB, "initialize", cDB_initialize, -1);
   rb_define_method(cDB, "close", cDB_close, 0);
-/*
-  rb_define_method(cDB, "errmsg", cDB_errmsg, 1);
+  rb_define_method(cDB, "errmsg", cDB_errmsg, -1);
   rb_define_method(cDB, "ecode", cDB_ecode, 0);
   rb_define_method(cDB, "put", cDB_put, 2);
   rb_define_alias(cDB, "[]=", "put");
@@ -324,16 +518,26 @@ void Init_tokyo_tyrant() {
   rb_define_method(cDB, "vsiz", cDB_vsiz, 2);
   rb_define_method(cDB, "iterinit", cDB_iterinit, 0);
   rb_define_method(cDB, "iternext", cDB_iternext, 0);
+  rb_define_method(cDB, "fwmkeys", cDB_fwmkeys, -1);
+  rb_define_method(cDB, "addint", cDB_addint, 2);
+  rb_define_method(cDB, "adddouble", cDB_adddouble, 2);
+  rb_define_method(cDB, "ext", cDB_ext, -1);
   rb_define_method(cDB, "sync", cDB_sync, 0);
-*/
   rb_define_method(cDB, "vanish", cDB_vanish, 0);
   rb_define_alias(cDB, "clear", "vanish");
-/*
   rb_define_method(cDB, "copy", cDB_copy, 1);
   rb_define_method(cDB, "restore", cDB_restore, 2);
   rb_define_method(cDB, "setmst", cDB_setmst, 2);
-*/
   rb_define_method(cDB, "rnum", cDB_rnum, 0);
+  rb_define_method(cDB, "empty?", cDB_empty, 0);
+
+  /* rubyisms
+  rb_define_method(cDB, "each", cDB_each, 0);
+  rb_define_method(cDB, "each_key", cDB_each_key, 0);
+  rb_define_method(cDB, "each_value", cDB_each_value, 0);
+  rb_define_method(cDB, "keys", cDB_keys, 0);
+  rb_define_method(cDB, "values", cDB_values, 0);
+  */
 
   rb_define_method(cTable, "put", cTable_put, 2);
   rb_define_alias(cTable, "[]=", "put");
