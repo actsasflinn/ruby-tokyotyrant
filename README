@@ -1,0 +1,9 @@
+= TokyoTyrant Ruby Client
+
+This is an _EXPERIMENTAL_ c extension for ruby to access TokyoTyrant databases.  It currently supports key/value and table databases.
+
+== TODO
+
+* Query Support for Table Databases
+* Enumerable(-like) methods
+* Specs!!!!
