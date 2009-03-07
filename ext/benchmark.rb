@@ -2,11 +2,6 @@ require 'benchmark'
 require 'rubygems'
 require 'faker'
 require 'date'
-require 'tokyotyrant'
-require 'rufus/tokyo/tyrant'
-require 'tokyo_tyrant'
-require 'memcached'
-require 'memcache'
 
 #
 # the data
@@ -61,6 +56,8 @@ data1 = data.collect { |e|
   h
 }
 
+require 'rufus/tokyo/tyrant'
+
 r = Rufus::Tokyo::TyrantTable.new('127.0.0.1', 1978)
 r.clear
 
@@ -77,9 +74,11 @@ Benchmark.benchmark(' ' * 20 + Benchmark::Tms::CAPTION, 20) do |b|
   end
 end
 
-r.clear
+require 'tokyotyrant'
+
 rdb = TokyoTyrant::RDBTBL::new
 rdb.open("127.0.0.1", 1978)
+rdb.clear
 
 2.times { puts }
 puts 'TokyoTyrant::RDB (Ruby)'
@@ -111,7 +110,9 @@ Benchmark.benchmark(' ' * 20 + Benchmark::Tms::CAPTION, 20) do |b|
   end
 end
 
+require 'memcached'
 m = Memcached.new('127.0.0.1:11211')
+m.flush
 
 2.times { puts }
 puts 'Memcached (C)'
@@ -126,7 +127,9 @@ Benchmark.benchmark(' ' * 20 + Benchmark::Tms::CAPTION, 20) do |b|
   end
 end
 
+require 'memcache'
 mc = MemCache.new('127.0.0.1:11211')
+mc.flush_all
 
 2.times { puts }
 puts 'MemCache (Ruby)'
