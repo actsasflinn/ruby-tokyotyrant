@@ -4,7 +4,7 @@ This is an _EXPERIMENTAL_ c extension for Ruby to access TokyoTyrant databases. 
 
 == Performance
 
-This is not in production use but the initial benchmarks are very interesting. Rsults look as closer to the memcached gem than any other tyrant client I've seen for Ruby.
+This is not in production but the initial benchmarks are very interesting. Results look closer to the memcached gem than any other tyrant client I've seen for Ruby.
 
 * Key/Value Store: http://gist.github.com/75212
 * Table Store: http://gist.github.com/74116
@@ -14,4 +14,3 @@ This is not in production use but the initial benchmarks are very interesting. R
 * Query Support for Table Databases
 * Enumerable(-like) methods
 * Specs!!!!
-
