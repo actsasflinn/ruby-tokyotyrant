@@ -3,12 +3,12 @@ require 'pathname'
 $root = Pathname(__FILE__).dirname
 
 $:.unshift $root
-$:.unshift $root.parent.join('lib').expand_path
+$:.unshift $root.parent.join('ext').expand_path
 
 require 'rubygems'
 require 'fileutils'
 require 'bacon'
-require 'helpers'
+require 'tokyo_tyrant'
 
 $root.class.glob('**/*_spec.rb').each {|l| load l}
 
