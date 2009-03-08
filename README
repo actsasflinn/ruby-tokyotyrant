@@ -11,6 +11,9 @@ This is not in production but the initial benchmarks are very interesting. Resul
 
 == TODO
 
-* Query Support for Table Databases
-* Enumerable(-like) methods
+x Query Support for Table Databases
+* Make API more Ruby-like
+  * Improve Query API (accept a symbols in place of constants)
+  * Enumerable(-like) methods
 * Specs!!!!
+* Break up C code into multiple to make it easier to grok
