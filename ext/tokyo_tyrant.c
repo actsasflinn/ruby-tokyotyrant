@@ -6,6 +6,7 @@
 #include <tcrdb.h>
 
 #define RDBVNDATA "@rdb"
+#define RDBQRYVNDATA "@rdbquery"
 #define NUMBUFSIZ 32
 #define TTPUT      0
 #define TTPUTKEEP  1
@@ -27,6 +28,7 @@ static VALUE mTokyoTyrant;
 static VALUE eTokyoTyrantError;
 static VALUE cDB;
 static VALUE cTable;
+static VALUE cQuery;
 
 uint64_t cDB_size(VALUE vself);
 char cDB_stat(VALUE vself);
@@ -480,12 +482,121 @@ static VALUE cTable_genuid(VALUE vself){
   return LL2NUM(tcrdbtblgenuid(db));
 }
 
+/* Query Methods */
+
+static int cQuery_procrec(const void *pkbuf, int pksiz, TCMAP *cols, void *opq){
+  VALUE vpkey, vcols, vrv, vkeys, vkey, vval;
+  int i, rv, num;
+  vpkey = rb_str_new(pkbuf, pksiz);
+  vcols = maptovhash(cols);
+  vrv = rb_yield_values(2, vpkey, vcols);
+  rv = (vrv == Qnil) ? 0 : NUM2INT(vrv);
+  if(rv & TDBQPPUT){
+    tcmapclear(cols);
+    vkeys = rb_funcall(vcols, rb_intern("keys"), 0);
+    num = RARRAY_LEN(vkeys);
+    for(i = 0; i < num; i++){
+      vkey = rb_ary_entry(vkeys, i);
+      vval = rb_hash_aref(vcols, vkey);
+      vkey = StringValueEx(vkey);
+      vval = StringValueEx(vval);
+      tcmapput(cols, RSTRING_PTR(vkey), RSTRING_LEN(vkey), RSTRING_PTR(vval), RSTRING_LEN(vval));
+    }
+  }
+  return rv;
+}
+
+static VALUE cQuery_initialize(VALUE vself, VALUE vrdb){
+  VALUE vqry;
+  TCRDB *db;
+  RDBQRY *qry;
+  Check_Type(vrdb, T_OBJECT);
+  vrdb = rb_iv_get(vrdb, RDBVNDATA);
+  Data_Get_Struct(vrdb, TCRDB, db);
+  qry = tcrdbqrynew(db);
+  vqry = Data_Wrap_Struct(rb_cObject, 0, tcrdbqrydel, qry);
+  rb_iv_set(vself, RDBQRYVNDATA, vqry);
+  rb_iv_set(vself, RDBVNDATA, vrdb);
+  return Qnil;
+}
+
+static VALUE cQuery_addcond(VALUE vself, VALUE vname, VALUE vop, VALUE vexpr){
+  VALUE vqry;
+  RDBQRY *qry;
+  vname = StringValueEx(vname);
+  vexpr = StringValueEx(vexpr);
+  vqry = rb_iv_get(vself, RDBQRYVNDATA);
+  Data_Get_Struct(vqry, RDBQRY, qry);
+  tcrdbqryaddcond(qry, RSTRING_PTR(vname), NUM2INT(vop), RSTRING_PTR(vexpr));
+  return Qnil;
+}
+
+static VALUE cQuery_setorder(VALUE vself, VALUE vname, VALUE vtype){
+  VALUE vqry;
+  RDBQRY *qry;
+  vname = StringValueEx(vname);
+  vqry = rb_iv_get(vself, RDBQRYVNDATA);
+  Data_Get_Struct(vqry, RDBQRY, qry);
+  tcrdbqrysetorder(qry, RSTRING_PTR(vname), NUM2INT(vtype));
+  return Qnil;
+}
+
+static VALUE cQuery_setmax(VALUE vself, VALUE vmax){
+  VALUE vqry;
+  RDBQRY *qry;
+  vqry = rb_iv_get(vself, RDBQRYVNDATA);
+  Data_Get_Struct(vqry, RDBQRY, qry);
+  tcrdbqrysetmax(qry, NUM2INT(vmax));
+  return Qnil;
+}
+
+static VALUE cQuery_search(VALUE vself){
+  VALUE vqry, vary;
+  RDBQRY *qry;
+  TCLIST *res;
+  vqry = rb_iv_get(vself, RDBQRYVNDATA);
+  Data_Get_Struct(vqry, RDBQRY, qry);
+  res = tcrdbqrysearch(qry);
+  vary = listtovary(res);
+  tclistdel(res);
+  return vary;
+}
+
+static VALUE cQuery_searchout(VALUE vself){
+  VALUE vqry;
+  RDBQRY *qry;
+  vqry = rb_iv_get(vself, RDBQRYVNDATA);
+  Data_Get_Struct(vqry, RDBQRY, qry);
+  return tcrdbqrysearchout(qry) ? Qtrue : Qfalse;
+}
+
+/*
+static VALUE cQuery_proc(VALUE vself, VALUE vproc){
+  VALUE vqry;
+  RDBQRY *qry;
+  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+  vqry = rb_iv_get(vself, RDBQRYVNDATA);
+  Data_Get_Struct(vqry, RDBQRY, qry);
+  return tcrdbqryproc(qry, (TDBQRYPROC)cQuery_procrec, NULL) ? Qtrue : Qfalse;
+}
+*/
+
+static VALUE cQuery_hint(VALUE vself){
+  VALUE vqry;
+  RDBQRY *qry;
+  vqry = rb_iv_get(vself, RDBQRYVNDATA);
+  Data_Get_Struct(vqry, RDBQRY, qry);
+  return rb_str_new2(tcrdbqryhint(qry));
+}
+
+
 void Init_tokyo_tyrant(){
   mTokyoTyrant = rb_define_module("TokyoTyrant");
 
   eTokyoTyrantError = rb_define_class("TokyoTyrantError", rb_eStandardError);
   cDB = rb_define_class_under(mTokyoTyrant, "DB", rb_cObject);
   cTable = rb_define_class_under(mTokyoTyrant, "Table", cDB);
+  cQuery = rb_define_class_under(mTokyoTyrant, "Query", rb_cObject);
 
   rb_define_const(cDB, "ESUCCESS", INT2NUM(TTESUCCESS));
   rb_define_const(cDB, "EINVALID", INT2NUM(TTEINVALID));
@@ -502,7 +613,7 @@ void Init_tokyo_tyrant(){
   rb_define_const(cDB, "ITVOID", INT2NUM(RDBITVOID));
   rb_define_const(cDB, "ITKEEP", INT2NUM(RDBITKEEP));
 
-  rb_define_method(cDB, "initialize", cDB_initialize, -1);
+  rb_define_private_method(cDB, "initialize", cDB_initialize, -1);
   rb_define_method(cDB, "close", cDB_close, 0);
   rb_define_method(cDB, "errmsg", cDB_errmsg, -1);
   rb_define_method(cDB, "ecode", cDB_ecode, 0);
@@ -548,4 +659,42 @@ void Init_tokyo_tyrant(){
   rb_define_alias(cTable, "[]", "get");
   rb_define_method(cTable, "setindex", cTable_setindex, 2);
   rb_define_method(cTable, "genuid", cTable_genuid, 0);
+
+
+  rb_define_private_method(cQuery, "initialize", cQuery_initialize, 1);
+
+  rb_define_const(cQuery, "CSTREQ", INT2NUM(RDBQCSTREQ));
+  rb_define_const(cQuery, "CSTRINC", INT2NUM(RDBQCSTRINC));
+  rb_define_const(cQuery, "CSTRBW", INT2NUM(RDBQCSTRBW));
+  rb_define_const(cQuery, "CSTREW", INT2NUM(RDBQCSTREW));
+  rb_define_const(cQuery, "CSTRAND", INT2NUM(RDBQCSTRAND));
+  rb_define_const(cQuery, "CSTROR", INT2NUM(RDBQCSTROR));
+  rb_define_const(cQuery, "CSTROREQ", INT2NUM(RDBQCSTROREQ));
+  rb_define_const(cQuery, "CSTRRX", INT2NUM(RDBQCSTRRX));
+  rb_define_const(cQuery, "CNUMEQ", INT2NUM(RDBQCNUMEQ));
+  rb_define_const(cQuery, "CNUMGT", INT2NUM(RDBQCNUMGT));
+  rb_define_const(cQuery, "CNUMGE", INT2NUM(RDBQCNUMGE));
+  rb_define_const(cQuery, "CNUMLT", INT2NUM(RDBQCNUMLT));
+  rb_define_const(cQuery, "CNUMLE", INT2NUM(RDBQCNUMLE));
+  rb_define_const(cQuery, "CNUMBT", INT2NUM(RDBQCNUMBT));
+  rb_define_const(cQuery, "CNUMOREQ", INT2NUM(RDBQCNUMOREQ));
+  rb_define_const(cQuery, "CNEGATE", INT2NUM(RDBQCNEGATE));
+  rb_define_const(cQuery, "CNOIDX", INT2NUM(RDBQCNOIDX));
+  rb_define_const(cQuery, "OSTRASC", INT2NUM(RDBQOSTRASC));
+  rb_define_const(cQuery, "OSTRDESC", INT2NUM(RDBQOSTRDESC));
+  rb_define_const(cQuery, "ONUMASC", INT2NUM(RDBQONUMASC));
+  rb_define_const(cQuery, "ONUMDESC", INT2NUM(RDBQONUMDESC));
+/*
+  rb_define_const(cQuery, "PPUT", INT2NUM(RDBQPPUT));
+  rb_define_const(cQuery, "POUT", INT2NUM(RDBQPOUT));
+  rb_define_const(cQuery, "PSTOP", INT2NUM(RDBQPSTOP));
+*/
+
+  rb_define_method(cQuery, "addcond", cQuery_addcond, 3);
+  rb_define_method(cQuery, "setorder", cQuery_setorder, 2);
+  rb_define_method(cQuery, "setmax", cQuery_setmax, 1);
+  rb_define_method(cQuery, "search", cQuery_search, 0);
+  rb_define_method(cQuery, "searchout", cQuery_searchout, 0);
+//  rb_define_method(cQuery, "proc", cQuery_proc, 0);
+  rb_define_method(cQuery, "hint", cQuery_hint, 0);
 }
