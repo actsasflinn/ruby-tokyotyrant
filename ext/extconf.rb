@@ -30,12 +30,10 @@ end
 find_library(*['tokyotyrant', "tcrdbnew", dir_config('libtokyotyrant').last].compact) or
   raise "shared library 'libtokyotyrant' not found"
 
-[
-  'tctdb.h',
-  'tcrdb.h'
-].each do |header|
-    find_header(*[header, dir_config('libtokyotyrant').first].compact) or
-      raise "header file '#{header}' not  found"
+['tctdb.h',
+ 'tcrdb.h'].each do |header|
+  find_header(*[header, dir_config('libtokyotyrant').first].compact) or
+    raise "header file '#{header}' not  found"
 end
 
 create_makefile 'tokyo_tyrant'
