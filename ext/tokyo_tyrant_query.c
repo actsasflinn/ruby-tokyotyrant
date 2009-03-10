@@ -19,6 +19,15 @@ static VALUE cQuery_addcond(VALUE vself, VALUE vname, VALUE vop, VALUE vexpr){
   RDBQRY *qry;
   vname = StringValueEx(vname);
   vexpr = StringValueEx(vexpr);
+
+  if (TYPE(vop) == T_SYMBOL) vop = rb_str_new2(rb_id2name(SYM2ID(vop)));
+
+  if (TYPE(vop) == T_STRING){
+    vop = StringValueEx(vop);
+    vop = tctdbqrystrtocondop(RSTRING_PTR(toupper(vop)));
+    vop = INT2NUM(vop);
+  }
+
   vqry = rb_iv_get(vself, RDBQRYVNDATA);
   Data_Get_Struct(vqry, RDBQRY, qry);
   tcrdbqryaddcond(qry, RSTRING_PTR(vname), NUM2INT(vop), RSTRING_PTR(vexpr));
@@ -29,6 +38,15 @@ static VALUE cQuery_setorder(VALUE vself, VALUE vname, VALUE vtype){
   VALUE vqry;
   RDBQRY *qry;
   vname = StringValueEx(vname);
+
+  if (TYPE(vtype) == T_SYMBOL) vtype = rb_str_new2(rb_id2name(SYM2ID(vtype)));
+
+  if (TYPE(vtype) == T_STRING){
+    vtype = StringValueEx(vtype);
+    vtype = tctdbqrystrtocondop(RSTRING_PTR(toupper(vtype)));
+    vtype = INT2NUM(vtype);
+  }
+
   vqry = rb_iv_get(vself, RDBQRYVNDATA);
   Data_Get_Struct(vqry, RDBQRY, qry);
   tcrdbqrysetorder(qry, RSTRING_PTR(vname), NUM2INT(vtype));
