@@ -12,6 +12,5 @@ This is not in production but the initial benchmarks are very interesting. Resul
 == TODO
 
 * Make API more Ruby-like
-  * Improve Query API (accept a symbols in place of constants)
   * Enumerable(-like) methods
 * Specs!!!!
