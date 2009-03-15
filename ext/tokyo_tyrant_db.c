@@ -99,6 +99,11 @@ static VALUE cDB_put(VALUE vself, VALUE vkey, VALUE vstr){
   return cDB_put_method(vself, vkey, vstr, TTPUT);
 }
 
+/* TODO: Implement mput using misc
+static VALUE cDB_mput(VALUE vself, VALUE vhash){
+}
+*/
+
 static VALUE cDB_putkeep(VALUE vself, VALUE vkey, VALUE vstr){
   return cDB_put_method(vself, vkey, vstr, TTPUTKEEP);  
 }
@@ -148,12 +153,25 @@ static VALUE cDB_get(VALUE vself, VALUE vkey){
   return vval;
 }
 
+/* TODO: Implement mget using misc
+static VALUE cDB_mget(VALUE vself, VALUE vargs){
+}
+*/
+
 static VALUE cDB_vsiz(VALUE vself, VALUE vkey){
   TCRDB *db;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
 
   vkey = StringValueEx(vkey);
   return INT2NUM(tcrdbvsiz2(db, RSTRING_PTR(vkey)));
+}
+
+static VALUE cDB_check(VALUE vself, VALUE vkey){
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  vkey = StringValueEx(vkey);
+  return tcrdbvsiz2(db, RSTRING_PTR(vkey)) >= 0 ? Qtrue : Qfalse;
 }
 
 static VALUE cDB_iterinit(VALUE vself){
@@ -212,13 +230,14 @@ static VALUE cDB_adddouble(VALUE vself, VALUE vkey, VALUE vnum){
   return isnan(num) ? Qnil : rb_float_new(num);
 }
 
+// TODO: Give this more attention, it's untested and needs defaults for scan_args
 static VALUE cDB_ext(int argc, VALUE *argv, VALUE vself){
   const char *res;
   VALUE vname, vkey, vvalue, vopts;
   TCRDB *db;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
 
-  rb_scan_args(argc, argv, "11", &vname, &vkey, &vvalue, &vopts);
+  rb_scan_args(argc, argv, "14", &vname, &vkey, &vvalue, &vopts);
 
   vname = StringValueEx(vname);
   vkey = StringValueEx(vkey);
@@ -292,7 +311,124 @@ static VALUE cDB_stat(VALUE vself){
   return rb_str_new2(tcrdbstat(db));
 }
 
-//TCLIST cDB_misc(VALUE vself, VALUE name, int opts, const TCLIST *args);
+static VALUE cDB_misc(int argc, VALUE *argv, VALUE vself){
+  VALUE vname, vopts, vargs;
+  TCRDB *db;
+  TCLIST *list, *args;
+  VALUE vary;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  rb_scan_args(argc, argv, "13", &vname, &vopts, &vargs);
+
+  args = varytolist(vargs);
+  vname = StringValueEx(vname);
+
+  list = tcrdbmisc(db, RSTRING_PTR(vname), NUM2INT(vopts), args);
+  vary = listtovary(list);
+  tclistdel(list);
+  return vary;
+}
+
+static VALUE cDB_fetch(int argc, VALUE *argv, VALUE vself){
+  VALUE vkey, vdef, vval;
+  TCRDB *db;
+  char *vbuf;
+  int vsiz;
+  rb_scan_args(argc, argv, "11", &vkey, &vdef);
+  vkey = StringValueEx(vkey);
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  if((vbuf = tcrdbget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), &vsiz)) != NULL){
+    vval = rb_str_new(vbuf, vsiz);
+    tcfree(vbuf);
+  } else {
+    vval = vdef;
+  }
+  return vval;
+}
+
+static VALUE cDB_each(VALUE vself){
+  VALUE vrv;
+  TCRDB *db;
+  char *kxstr, *vxstr;
+  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  vrv = Qnil;
+  tcrdbiterinit(db);
+  while((kxstr = tcrdbiternext2(db)) != NULL){
+    vxstr = tcrdbget2(db, kxstr);
+    vrv = rb_yield_values(2, rb_str_new2(kxstr), rb_str_new2(vxstr));
+  }
+  return vrv;
+}
+
+static VALUE cDB_each_key(VALUE vself){
+  VALUE vrv;
+  TCRDB *db;
+  char *kxstr;
+  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  vrv = Qnil;
+  tcrdbiterinit(db);
+  while((kxstr = tcrdbiternext2(db)) != NULL){
+    vrv = rb_yield_values(1, rb_str_new2(kxstr));
+  }
+  return vrv;
+}
+
+static VALUE cDB_each_value(VALUE vself){
+  VALUE vrv;
+  TCRDB *db;
+  char *kxstr, *vxstr;
+  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  vrv = Qnil;
+  tcrdbiterinit(db);
+  while((kxstr = tcrdbiternext2(db)) != NULL){
+    vxstr = tcrdbget2(db, kxstr);
+    vrv = rb_yield_values(1, rb_str_new2(vxstr));
+  }
+  return vrv;
+}
+
+static VALUE cDB_keys(VALUE vself){
+  /*
+  VALUE vary;
+  TCRDB *db;
+  char *kxstr;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  vary = rb_ary_new2(tcrdbrnum(db));
+  tcrdbiterinit(db);
+  while((kxstr = tcrdbiternext2(db)) != NULL){
+    rb_ary_push(vary, rb_str_new2(kxstr));
+  }
+  return vary;
+  */
+
+  // Using forward matching keys with an empty string is 100x faster than iternext+get
+  VALUE vary;
+  TCLIST *keys;
+  TCRDB *db;
+  char *prefix;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  prefix = "";
+  keys = tcrdbfwmkeys2(db, prefix, -1);
+  vary = listtovary(keys);
+  tclistdel(keys);
+  return vary;
+}
+
+static VALUE cDB_values(VALUE vself){
+  VALUE vary;
+  TCRDB *db;
+  char *kxstr, *vxstr;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  vary = rb_ary_new2(tcrdbrnum(db));
+  tcrdbiterinit(db);
+  while((kxstr = tcrdbiternext2(db)) != NULL){
+    vxstr = tcrdbget2(db, kxstr);
+    rb_ary_push(vary, rb_str_new2(vxstr));
+  }
+  return vary;
+}
 
 void init_db(){
   rb_define_const(cDB, "ESUCCESS", INT2NUM(TTESUCCESS));
@@ -323,7 +459,17 @@ void init_db(){
   rb_define_method(cDB, "out", cDB_out, 1);
   rb_define_method(cDB, "get", cDB_get, 1);
   rb_define_alias(cDB, "[]", "get");
-  rb_define_method(cDB, "vsiz", cDB_vsiz, 2);
+  rb_define_method(cDB, "vsiz", cDB_vsiz, 1);
+  rb_define_method(cDB, "check", cDB_check, 1);
+  rb_define_alias(cDB, "has_key?", "check");
+  rb_define_alias(cDB, "key?", "check");
+  /*
+  rb_define_method(cDB, "check_value", cDB_check_value, 1);
+  rb_define_alias(cDB, "has_value?", "check_value");
+  rb_define_alias(cDB, "value?", "check_value");
+  */
+  rb_define_alias(cDB, "include?", "check");
+  rb_define_alias(cDB, "member?", "check");
   rb_define_method(cDB, "iterinit", cDB_iterinit, 0);
   rb_define_method(cDB, "iternext", cDB_iternext, 0);
   rb_define_method(cDB, "fwmkeys", cDB_fwmkeys, -1);
@@ -339,13 +485,14 @@ void init_db(){
   rb_define_method(cDB, "rnum", cDB_rnum, 0);
   rb_define_method(cDB, "empty?", cDB_empty, 0);
   rb_define_method(cDB, "size", cDB_size, 0);
+  rb_define_alias(cDB, "length", "size");
   rb_define_method(cDB, "stat", cDB_stat, 0);
-
-  /* rubyisms
+  rb_define_method(cDB, "misc", cDB_misc, -1);
+  rb_define_method(cDB, "fetch", cDB_fetch, -1);
   rb_define_method(cDB, "each", cDB_each, 0);
+  rb_define_alias(cDB, "each_pair", "each");
   rb_define_method(cDB, "each_key", cDB_each_key, 0);
   rb_define_method(cDB, "each_value", cDB_each_value, 0);
   rb_define_method(cDB, "keys", cDB_keys, 0);
   rb_define_method(cDB, "values", cDB_values, 0);
-  */
 }

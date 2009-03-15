@@ -11,6 +11,7 @@ This is not in production but the initial benchmarks are very interesting. Resul
 
 == TODO
 
-* Make API more Ruby-like
-  * Enumerable(-like) methods
+* implement mget/mput through misc
+* implement get_reverse for has_value?
+* fix up and test extensions
 * Specs!!!!
