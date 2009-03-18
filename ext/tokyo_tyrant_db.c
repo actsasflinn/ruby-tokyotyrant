@@ -483,6 +483,7 @@ void init_db(){
   rb_define_method(cDB, "restore", cDB_restore, 2);
   rb_define_method(cDB, "setmst", cDB_setmst, 2);
   rb_define_method(cDB, "rnum", cDB_rnum, 0);
+  rb_define_alias(cDB, "count", "rnum");
   rb_define_method(cDB, "empty?", cDB_empty, 0);
   rb_define_method(cDB, "size", cDB_size, 0);
   rb_define_alias(cDB, "length", "size");
