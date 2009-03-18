@@ -82,6 +82,50 @@ static VALUE cTable_genuid(VALUE vself){
   return LL2NUM(tcrdbtblgenuid(db));
 }
 
+static VALUE cTable_each(VALUE vself){
+  VALUE vrv;
+  TCRDB *db;
+  TCMAP *cols;
+  char *kbuf;
+  int ksiz;
+  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  vrv = Qnil;
+  tcrdbiterinit(db);
+  while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
+    if((cols = tcrdbtblget(db, kbuf, ksiz)) != NULL){
+      vrv = rb_yield_values(2, rb_str_new(kbuf, ksiz), maptovhash(cols));
+      tcmapdel(cols);
+    } else {
+      vrv = rb_yield_values(2, rb_str_new(kbuf, ksiz), Qnil);
+    }
+    tcfree(kbuf);
+  }
+  return vrv;
+}
+
+static VALUE cTable_each_value(VALUE vself){
+  VALUE vrv;
+  TCRDB *db;
+  TCMAP *cols;
+  char *kbuf;
+  int ksiz;
+  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  vrv = Qnil;
+  tcrdbiterinit(db);
+  while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
+    if((cols = tcrdbtblget(db, kbuf, ksiz)) != NULL){
+      vrv = rb_yield(maptovhash(cols));
+      tcmapdel(cols);
+    } else {
+      vrv = rb_yield(Qnil);
+    }
+    tcfree(kbuf);
+  }
+  return vrv;
+}
+
 void init_table(){
   rb_define_method(cTable, "put", cTable_put, 2);
   rb_define_alias(cTable, "[]=", "put");
@@ -92,4 +136,7 @@ void init_table(){
   rb_define_alias(cTable, "[]", "get");
   rb_define_method(cTable, "setindex", cTable_setindex, 2);
   rb_define_method(cTable, "genuid", cTable_genuid, 0);
+  rb_define_method(cTable, "each", cTable_each, 0);
+  rb_define_alias(cTable, "each_pair", "each");
+  rb_define_method(cTable, "each_value", cTable_each_value, 0);
 }
