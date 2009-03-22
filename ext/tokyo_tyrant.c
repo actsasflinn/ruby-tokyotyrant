@@ -10,6 +10,8 @@ extern VALUE StringValueEx(VALUE vobj){
   case T_BIGNUM:
     ksiz = sprintf(kbuf, "%lld", (long long)NUM2LL(vobj));
     return rb_str_new(kbuf, ksiz);
+  case T_SYMBOL:
+    return rb_str_new2(rb_id2name(SYM2ID(vobj)));
   case T_TRUE:
     ksiz = sprintf(kbuf, "true");
     return rb_str_new(kbuf, ksiz);
@@ -78,6 +80,44 @@ extern VALUE maptovhash(TCMAP *map){
     rb_hash_aset(vhash, rb_str_new(kbuf, ksiz), rb_str_new(vbuf, vsiz));
   }
   return vhash;
+}
+
+extern TCMAP *varytomap(VALUE vary){
+  int i;
+  TCLIST *keys;
+  TCMAP *recs = tcmapnew();
+  keys = varytolist(vary);
+  for(i = 0; i < tclistnum(keys); i++){
+    int ksiz;
+    const char *kbuf = tclistval(keys, i, &ksiz);
+    tcmapput(recs, kbuf, ksiz, "", 0);
+  }
+  return recs;
+}
+
+extern TCLIST *vhashtolist(VALUE vhash){
+  /*
+  Seems like something like this might work just as well
+  vary = rb_hash_to_a(vhash);
+  vary = rb_ary_flatten(vary);
+  args = varytolist(vary);
+  */
+
+  VALUE vkeys, vkey, vval;
+  TCLIST *list;
+  int i, num;
+  vkeys = rb_funcall(vhash, rb_intern("keys"), 0);
+  num = RARRAY_LEN(vkeys);
+  list = tclistnew2(num);
+  for(i = 0; i < num; i++){
+    vkey = rb_ary_entry(vkeys, i);
+    vval = rb_hash_aref(vhash, vkey);
+    vkey = StringValueEx(vkey);
+    vval = StringValueEx(vval);
+    tclistpush(list, RSTRING_PTR(vkey), RSTRING_LEN(vkey));
+    tclistpush(list, RSTRING_PTR(vval), RSTRING_LEN(vval));
+  }
+  return list;
 }
 
 VALUE mTokyoTyrant;

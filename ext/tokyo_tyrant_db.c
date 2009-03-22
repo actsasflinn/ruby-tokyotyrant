@@ -22,7 +22,7 @@ static VALUE cDB_initialize(int argc, VALUE *argv, VALUE vself){
   int ecode;
   TCRDB *db;
 
-  rb_scan_args(argc, argv, "11", &host, &port);
+  rb_scan_args(argc, argv, "02", &host, &port);
   if(NIL_P(host)) host = rb_str_new2("127.0.0.1");
   if(NIL_P(port)) port = INT2FIX(1978);
 
@@ -99,10 +99,18 @@ static VALUE cDB_put(VALUE vself, VALUE vkey, VALUE vstr){
   return cDB_put_method(vself, vkey, vstr, TTPUT);
 }
 
-/* TODO: Implement mput using misc
 static VALUE cDB_mput(VALUE vself, VALUE vhash){
+  VALUE vary;
+  TCRDB *db;
+  TCLIST *list, *args;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  args = vhashtolist(vhash);
+  list = tcrdbmisc(db, "putlist", 0, args);
+  vary = listtovary(list);
+  tclistdel(list);
+  return vary;
 }
-*/
 
 static VALUE cDB_putkeep(VALUE vself, VALUE vkey, VALUE vstr){
   return cDB_put_method(vself, vkey, vstr, TTPUTKEEP);  
@@ -153,10 +161,37 @@ static VALUE cDB_get(VALUE vself, VALUE vkey){
   return vval;
 }
 
-/* TODO: Implement mget using misc
-static VALUE cDB_mget(VALUE vself, VALUE vargs){
+static VALUE cDB_mget(int argc, VALUE *argv, VALUE vself){
+  VALUE vkeys, vhash, vvalue;
+  TCRDB *db;
+  TCMAP *recs;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  rb_scan_args(argc, argv, "*", &vkeys);
+
+  // I really hope there is a better way to do this
+  if (RARRAY_LEN(vkeys) == 1) {
+    vvalue = rb_ary_entry(vkeys, 0);
+    switch (TYPE(vvalue)){
+      case T_STRING:
+      case T_FIXNUM:
+        break;
+      case T_ARRAY:
+        vkeys = vvalue;
+        break;
+      case T_OBJECT:
+        vkeys = rb_convert_type(vvalue, T_ARRAY, "Array", "to_a");
+        break;
+    }
+  }
+
+  Check_Type(vkeys, T_ARRAY);
+
+  recs = varytomap(vkeys);
+  if(!tcrdbget3(db, recs)) return Qnil;
+  vhash = maptovhash(recs);
+  tcmapdel(recs);
+  return vhash;
 }
-*/
 
 static VALUE cDB_vsiz(VALUE vself, VALUE vkey){
   TCRDB *db;
@@ -450,6 +485,7 @@ void init_db(){
   rb_define_method(cDB, "close", cDB_close, 0);
   rb_define_method(cDB, "errmsg", cDB_errmsg, -1);
   rb_define_method(cDB, "ecode", cDB_ecode, 0);
+  rb_define_method(cDB, "mput", cDB_mput, 1);
   rb_define_method(cDB, "put", cDB_put, 2);
   rb_define_alias(cDB, "[]=", "put");
   rb_define_method(cDB, "putkeep", cDB_putkeep, 2);
@@ -459,6 +495,7 @@ void init_db(){
   rb_define_method(cDB, "out", cDB_out, 1);
   rb_define_method(cDB, "get", cDB_get, 1);
   rb_define_alias(cDB, "[]", "get");
+  rb_define_method(cDB, "mget", cDB_mget, -1);
   rb_define_method(cDB, "vsiz", cDB_vsiz, 1);
   rb_define_method(cDB, "check", cDB_check, 1);
   rb_define_alias(cDB, "has_key?", "check");
