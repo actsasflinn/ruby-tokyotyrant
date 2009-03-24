@@ -82,6 +82,40 @@ static VALUE cQuery_searchout(VALUE vself){
   return tcrdbqrysearchout(qry) ? Qtrue : Qfalse;
 }
 
+static VALUE cQuery_get(VALUE vself){
+  int i, j, num, colnum;
+  VALUE vqry, vhash, vrow;
+  RDBQRY *qry;
+  TCLIST *res;
+  vqry = rb_iv_get(vself, RDBQRYVNDATA);
+  Data_Get_Struct(vqry, RDBQRY, qry);
+
+  /* Would this be better implemented using tcrdbqrysearch and tcrdbget3? */
+  res = tcrdbqrysearchget(qry);
+  num = tclistnum(res);
+  vhash = rb_hash_new();
+  for(i = 0; i < num; i++){
+    int rsiz;
+    const char *rbuf = tclistval(res, i, &rsiz);
+    TCLIST *row = tcstrsplit2(rbuf, rsiz);
+    colnum = tclistnum(row);
+    colnum--;
+    int ksiz;
+    const char *kbuf = tclistval(row, 1, &ksiz);
+    vrow = rb_hash_new();
+    for(j = 2; j < colnum; j+=2){
+      int csiz, vsiz;
+      const char *cbuf = tclistval(row, j, &csiz);
+      const char *vbuf = tclistval(row, j+1, &vsiz);
+      rb_hash_aset(vrow, rb_str_new2(cbuf), rb_str_new2(vbuf));
+    }
+    tclistdel(row);
+    rb_hash_aset(vhash, rb_str_new2(kbuf), vrow);
+  }
+  tclistdel(res);
+  return vhash;
+}
+
 void init_query(){
   rb_define_const(cQuery, "CSTREQ", INT2NUM(RDBQCSTREQ));
   rb_define_const(cQuery, "CSTRINC", INT2NUM(RDBQCSTRINC));
@@ -114,4 +148,5 @@ void init_query(){
   rb_define_alias(cQuery, "limit", "setmax");
   rb_define_method(cQuery, "search", cQuery_search, 0);
   rb_define_method(cQuery, "searchout", cQuery_searchout, 0);
+  rb_define_method(cQuery, "get", cQuery_get, 0);
 }
