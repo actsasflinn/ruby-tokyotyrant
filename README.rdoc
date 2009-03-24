@@ -8,6 +8,7 @@ This is not in production but the initial benchmarks are very interesting. Resul
 
 * Key/Value Store: http://gist.github.com/75212
 * Table Store: http://gist.github.com/74116
+* Bulk Operations: http://gist.github.com/83194
 
 == Example 
 
