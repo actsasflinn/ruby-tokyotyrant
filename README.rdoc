@@ -45,6 +45,13 @@ This is not in production but the initial benchmarks are very interesting. Resul
   # ["bar", {"baz"=>"box"}]
   # => nil
 
+  # mget
+  100.times do |i|
+    t[i] = { 'name' => 'Pat', 'sex' => i % 2 > 0 ? 'male' : 'female' }
+  end
+  t.mget(0..3)
+  # => {"0"=>{"name"=>"Pat", "sex"=>"female"}, "1"=>{"name"=>"Pat", "sex"=>"male"}, "2"=>{"name"=>"Pat", "sex"=>"female"}, "3"=>{"name"=>"Pat", "sex"=>"male"}}
+
 === Table Query
 
   require 'tokyo_tyrant'
@@ -65,7 +72,7 @@ This is not in production but the initial benchmarks are very interesting. Resul
   # => {"7"=>{"name"=>"Pat", "sex"=>"male"}, "9"=>{"name"=>"Pat", "sex"=>"male"}, "1"=>{"name"=>"Pat", "sex"=>"male"}, "3"=>{"name"=>"Pat", "sex"=>"male"}, "5"=>{"name"=>"Pat", "sex"=>"male"}}
 
 == TODO
-* implement mget/mput for table db
+* implement mput for table db
 * implement get_reverse for has_value?
 * fix up and test extensions
 * Specs!!!!

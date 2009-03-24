@@ -69,6 +69,46 @@ static VALUE cTable_get(VALUE vself, VALUE vkey){
   return vcols;
 }
 
+static VALUE cTable_mget(int argc, VALUE *argv, VALUE vself){
+  const char *kbuf, *vbuf;
+  int ksiz, vsiz;
+  VALUE vkeys, vhash, vcols, vvalue;
+  TCRDB *db;
+  TCMAP *recs, *cols;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  rb_scan_args(argc, argv, "*", &vkeys);
+
+  // I really hope there is a better way to do this
+  if (RARRAY_LEN(vkeys) == 1) {
+    vvalue = rb_ary_entry(vkeys, 0);
+    switch (TYPE(vvalue)){
+      case T_STRING:
+      case T_FIXNUM:
+        break;
+      case T_ARRAY:
+        vkeys = vvalue;
+        break;
+      case T_OBJECT:
+        vkeys = rb_convert_type(vvalue, T_ARRAY, "Array", "to_a");
+        break;
+    }
+  }
+  Check_Type(vkeys, T_ARRAY);
+
+  recs = varytomap(vkeys);
+  if(!tcrdbget3(db, recs)) return Qnil;
+  vhash = rb_hash_new();
+  tcmapiterinit(recs);
+  while((kbuf = tcmapiternext(recs, &ksiz)) != NULL){
+    vbuf = tcmapiterval(kbuf, &vsiz);
+    cols = tcstrsplit4(vbuf, vsiz);
+    vcols = maptovhash(cols);
+    rb_hash_aset(vhash, rb_str_new(kbuf, ksiz), vcols);
+  }
+  tcmapdel(recs);
+  return vhash;
+}
+
 static VALUE cTable_setindex(VALUE vself, VALUE vname, VALUE vtype){
   TCRDB *db;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
@@ -133,6 +173,7 @@ void init_table(){
   rb_define_method(cTable, "putcat", cTable_putcat, 2);
   rb_define_method(cTable, "out", cTable_out, 1);
   rb_define_method(cTable, "get", cTable_get, 1);
+  rb_define_method(cTable, "mget", cTable_mget, -1);
   rb_define_alias(cTable, "[]", "get");
   rb_define_method(cTable, "setindex", cTable_setindex, 2);
   rb_define_method(cTable, "genuid", cTable_genuid, 0);
