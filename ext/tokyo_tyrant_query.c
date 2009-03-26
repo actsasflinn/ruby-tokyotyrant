@@ -83,37 +83,36 @@ static VALUE cQuery_searchout(VALUE vself){
 }
 
 static VALUE cQuery_get(VALUE vself){
-  int i, j, num, colnum;
-  VALUE vqry, vhash, vrow;
+  int i, num;
+  const char *name, *col;
+  VALUE vqry, vary, vcols;
   RDBQRY *qry;
   TCLIST *res;
+  TCMAP *cols;
   vqry = rb_iv_get(vself, RDBQRYVNDATA);
   Data_Get_Struct(vqry, RDBQRY, qry);
 
-  /* Would this be better implemented using tcrdbqrysearch and tcrdbget3? */
   res = tcrdbqrysearchget(qry);
   num = tclistnum(res);
-  vhash = rb_hash_new();
+  vary = rb_ary_new2(num);
   for(i = 0; i < num; i++){
-    int rsiz;
-    const char *rbuf = tclistval(res, i, &rsiz);
-    TCLIST *row = tcstrsplit2(rbuf, rsiz);
-    colnum = tclistnum(row);
-    colnum--;
-    int ksiz;
-    const char *kbuf = tclistval(row, 1, &ksiz);
-    vrow = rb_hash_new();
-    for(j = 2; j < colnum; j+=2){
-      int csiz, vsiz;
-      const char *cbuf = tclistval(row, j, &csiz);
-      const char *vbuf = tclistval(row, j+1, &vsiz);
-      rb_hash_aset(vrow, rb_str_new2(cbuf), rb_str_new2(vbuf));
+    vcols = rb_hash_new();
+    cols = tcrdbqryrescols(res, i);
+    if(cols){
+      tcmapiterinit(cols);
+      while((name = tcmapiternext2(cols)) != NULL){
+        // currently this leave the pkey in the hash with a blank key
+        // what's better, leave it as a blank key or add this as __id
+        // or something similar?
+        col = tcmapget2(cols, name);
+        rb_hash_aset(vcols, rb_str_new2(name), rb_str_new2(col));
+      }
     }
-    tclistdel(row);
-    rb_hash_aset(vhash, rb_str_new2(kbuf), vrow);
+    tcmapdel(cols);
+    rb_ary_push(vary, vcols);
   }
   tclistdel(res);
-  return vhash;
+  return vary;
 }
 
 void init_query(){
