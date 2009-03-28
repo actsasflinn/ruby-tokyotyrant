@@ -49,10 +49,14 @@ $find_name_list = []
 data.collect! { |e|
   (0..colnames.length - 1).inject({}) { |h, i| h[colnames[i]] = e[i]; h }
 }
- 
+
+data_h = {}
+i = 0
 data1 = data.collect { |e|
+  i = i + 1
   h = e.dup
   h['birthday'] = h['birthday'].to_s
+  data_h[i.to_s] = h
   h
 }
 
@@ -108,6 +112,14 @@ Benchmark.benchmark(' ' * 20 + Benchmark::Tms::CAPTION, 20) do |b|
   b.report('reading data') do
     data1.each_with_index { |e, i| nothing = t[i] }
   end
+
+  b.report('bulk writing data') do
+    nothing = t.mput(data_h)
+  end
+
+  b.report('bulk reading data') do
+    nothing = t.mget(0..9999)
+  end
 end
 
 require 'memcached'
@@ -124,6 +136,10 @@ Benchmark.benchmark(' ' * 20 + Benchmark::Tms::CAPTION, 20) do |b|
 
   b.report('reading data') do
     data1.each_with_index { |e, i| nothing = m.get(i.to_s) }
+  end
+
+  b.report('bulk reading data') do
+    nothing = m.get((0..9999).to_a.collect{|i| i.to_s})
   end
 end
 

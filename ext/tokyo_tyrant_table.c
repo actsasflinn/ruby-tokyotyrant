@@ -40,6 +40,41 @@ static VALUE cTable_put(VALUE vself, VALUE vkey, VALUE vcols){
   return cTable_put_method(vself, vkey, vcols, TTPUT);
 }
 
+static VALUE cTable_mput(VALUE vself, VALUE vhash){
+  int i, num, j;
+  VALUE vary, vkeys, vkey, vval;
+  TCRDB *db;
+  TCLIST *list;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  vkeys = rb_funcall(vhash, rb_intern("keys"), 0);
+  num = RARRAY_LEN(vkeys);
+  list = tclistnew2(num * 2);
+  for(i = 0; i < num; i++){
+    vkey = rb_ary_entry(vkeys, i);
+    vval = rb_hash_aref(vhash, vkey);
+
+    vkey = StringValueEx(vkey);
+    tclistpush2(list, RSTRING_PTR(vkey));
+
+    TCLIST *cols = vhashtolist(vval);
+    TCXSTR *xstr = tcxstrnew();
+
+    for(j = 0; j < tclistnum(cols); j++){
+      int rsiz;
+      const char *rbuf = tclistval(cols, j, &rsiz);
+      if (j > 0) tcxstrcat(xstr, "\0", 1);
+      tcxstrcat(xstr, rbuf, rsiz);
+    }
+    tclistpush(list, tcxstrptr(xstr), tcxstrsize(xstr));
+    tcxstrdel(xstr);
+  }
+  list = tcrdbmisc(db, "putlist", 0, list);
+  vary = listtovary(list);
+  tclistdel(list);
+  return vary;
+}
+
 static VALUE cTable_putkeep(VALUE vself, VALUE vkey, VALUE vcols){
   return cTable_put_method(vself, vkey, vcols, TTPUTKEEP);
 }
@@ -167,6 +202,7 @@ static VALUE cTable_each_value(VALUE vself){
 }
 
 void init_table(){
+  rb_define_method(cTable, "mput", cTable_mput, 1);
   rb_define_method(cTable, "put", cTable_put, 2);
   rb_define_alias(cTable, "[]=", "put");
   rb_define_method(cTable, "putkeep", cTable_putkeep, 2);

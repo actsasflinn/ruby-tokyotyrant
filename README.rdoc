@@ -45,10 +45,12 @@ This is not in production but the initial benchmarks are very interesting. Resul
   # ["bar", {"baz"=>"box"}]
   # => nil
 
-  # mget
+  # bulk operations
+  h = {}
   100.times do |i|
-    t[i] = { 'name' => 'Pat', 'sex' => i % 2 > 0 ? 'male' : 'female' }
+    h[i] = { 'name' => 'Pat', 'sex' => i % 2 > 0 ? 'male' : 'female' }
   end
+  t.mput(h)
   t.mget(0..3)
   # => {"0"=>{"name"=>"Pat", "sex"=>"female"}, "1"=>{"name"=>"Pat", "sex"=>"male"}, "2"=>{"name"=>"Pat", "sex"=>"female"}, "3"=>{"name"=>"Pat", "sex"=>"male"}}
 
@@ -72,7 +74,6 @@ This is not in production but the initial benchmarks are very interesting. Resul
   # => [{"name"=>"Pat", ""=>"1", "sex"=>"male"}, {"name"=>"Pat", ""=>"3", "sex"=>"male"}, {"name"=>"Pat", ""=>"5", "sex"=>"male"}, {"name"=>"Pat", ""=>"7", "sex"=>"male"}, {"name"=>"Pat", ""=>"9", "sex"=>"male"}]
 
 == TODO
-* implement mput for table db
 * implement get_reverse for has_value?
 * fix up and test extensions
 * Specs!!!!
