@@ -11,7 +11,7 @@ static VALUE cDB_close(VALUE vself){
 
   if(!tcrdbclose(db)){
     ecode = tcrdbecode(db);
-    rb_raise(eTokyoTyrantError, "close error: %s\n", tcrdberrmsg(ecode));
+    rb_raise(eTokyoTyrantError, "close error: %s", tcrdberrmsg(ecode));
   }
 
   return Qtrue;
@@ -30,7 +30,7 @@ static VALUE cDB_initialize(int argc, VALUE *argv, VALUE vself){
 
   if(!tcrdbopen(db, StringValuePtr(host), FIX2INT(port))){
     ecode = tcrdbecode(db);
-    rb_raise(eTokyoTyrantError, "open error: %s\n", tcrdberrmsg(ecode));
+    rb_raise(eTokyoTyrantError, "open error: %s", tcrdberrmsg(ecode));
   }
 
   rb_iv_set(vself, "@host", host);
@@ -89,7 +89,7 @@ static VALUE cDB_put_method(VALUE vself, VALUE vkey, VALUE vstr, int method){
 
   if(!res){
     ecode = tcrdbecode(db);
-    rb_raise(eTokyoTyrantError, "put error: %s\n", tcrdberrmsg(ecode));
+    rb_raise(eTokyoTyrantError, "put error: %s", tcrdberrmsg(ecode));
   }
 
   return Qtrue;  
@@ -134,7 +134,7 @@ static VALUE cDB_putshl(VALUE vself, VALUE vkey, VALUE vstr, VALUE vwidth){
 
   if(!tcrdbputshl2(db, RSTRING_PTR(vkey), RSTRING_PTR(vstr), FIXNUM_P(vwidth))){
     ecode = tcrdbecode(db);
-    rb_raise(eTokyoTyrantError, "put error: %s\n", tcrdberrmsg(ecode));
+    rb_raise(eTokyoTyrantError, "put error: %s", tcrdberrmsg(ecode));
   }
 
   return Qtrue;

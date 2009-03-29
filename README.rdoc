@@ -77,4 +77,5 @@ This is not in production but the initial benchmarks are very interesting. Resul
 == TODO
 * implement get_reverse for has_value?
 * fix up and test extensions
-* Specs!!!!
+* Table DB Specs
+* Query DB Specs
