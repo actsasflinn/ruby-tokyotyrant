@@ -18,9 +18,14 @@ extern VALUE StringValueEx(VALUE vobj){
   case T_FALSE:
     ksiz = sprintf(kbuf, "false");
     return rb_str_new(kbuf, ksiz);
-  case T_NIL:
-    ksiz = sprintf(kbuf, "nil");
-    return rb_str_new(kbuf, ksiz);
+// I don't like this, I'd rather an empty string
+//  case T_NIL:
+//    ksiz = sprintf(kbuf, "nil");
+//    return rb_str_new(kbuf, ksiz);
+  default:
+    if (rb_respond_to(vobj, rb_intern("to_s"))) {
+      return rb_convert_type(vobj, T_STRING, "String", "to_s");
+    }
   }
   return StringValue(vobj);
 }
