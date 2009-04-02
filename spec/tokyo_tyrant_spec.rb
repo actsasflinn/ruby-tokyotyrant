@@ -1,7 +1,7 @@
 require 'pathname'
 require Pathname(__FILE__).dirname.join('spec_base') unless $root
 
-describe TokyoTyrant, "with an open database" do
+describe TokyoTyrant::DB, "with an open database" do
 
   before do
     @db = TokyoTyrant::DB.new('127.0.0.1', 1978)
