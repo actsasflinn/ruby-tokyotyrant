@@ -88,7 +88,7 @@ static VALUE cTable_out(VALUE vself, VALUE vkey){
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
   vkey = StringValueEx(vkey);
 
-  return tcrdbtblout(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey));
+  return tcrdbtblout(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey)) ? Qtrue : Qfalse;
 }
 
 static VALUE cTable_get(VALUE vself, VALUE vkey){
@@ -99,7 +99,7 @@ static VALUE cTable_get(VALUE vself, VALUE vkey){
   vkey = StringValueEx(vkey);
 
   if(!(cols = tcrdbtblget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey)))) return Qnil;
-  vcols = maptovhash(cols);
+  vcols = maptovhashsym(cols);
   tcmapdel(cols);
   return vcols;
 }
@@ -137,7 +137,7 @@ static VALUE cTable_mget(int argc, VALUE *argv, VALUE vself){
   while((kbuf = tcmapiternext(recs, &ksiz)) != NULL){
     vbuf = tcmapiterval(kbuf, &vsiz);
     cols = tcstrsplit4(vbuf, vsiz);
-    vcols = maptovhash(cols);
+    vcols = maptovhashsym(cols);
     rb_hash_aset(vhash, rb_str_new(kbuf, ksiz), vcols);
   }
   tcmapdel(recs);
@@ -157,6 +157,22 @@ static VALUE cTable_genuid(VALUE vself){
   return LL2NUM(tcrdbtblgenuid(db));
 }
 
+static VALUE cTable_fetch(int argc, VALUE *argv, VALUE vself){
+  VALUE vkey, vdef, vval;
+  TCRDB *db;
+  TCMAP *cols;
+  rb_scan_args(argc, argv, "11", &vkey, &vdef);
+  vkey = StringValueEx(vkey);
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  if((cols = tcrdbtblget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey))) != NULL){
+    vval = maptovhashsym(cols);
+    tcmapdel(cols);
+  } else {
+    vval = vdef;
+  }
+  return vval;
+}
+
 static VALUE cTable_each(VALUE vself){
   VALUE vrv;
   TCRDB *db;
@@ -169,7 +185,7 @@ static VALUE cTable_each(VALUE vself){
   tcrdbiterinit(db);
   while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
     if((cols = tcrdbtblget(db, kbuf, ksiz)) != NULL){
-      vrv = rb_yield_values(2, rb_str_new(kbuf, ksiz), maptovhash(cols));
+      vrv = rb_yield_values(2, rb_str_new(kbuf, ksiz), maptovhashsym(cols));
       tcmapdel(cols);
     } else {
       vrv = rb_yield_values(2, rb_str_new(kbuf, ksiz), Qnil);
@@ -191,7 +207,7 @@ static VALUE cTable_each_value(VALUE vself){
   tcrdbiterinit(db);
   while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
     if((cols = tcrdbtblget(db, kbuf, ksiz)) != NULL){
-      vrv = rb_yield(maptovhash(cols));
+      vrv = rb_yield(maptovhashsym(cols));
       tcmapdel(cols);
     } else {
       vrv = rb_yield(Qnil);
@@ -213,6 +229,7 @@ void init_table(){
   rb_define_alias(cTable, "[]", "get");
   rb_define_method(cTable, "setindex", cTable_setindex, 2);
   rb_define_method(cTable, "genuid", cTable_genuid, 0);
+  rb_define_method(cTable, "fetch", cTable_fetch, -1);
   rb_define_method(cTable, "each", cTable_each, 0);
   rb_define_alias(cTable, "each_pair", "each");
   rb_define_method(cTable, "each_value", cTable_each_value, 0);
