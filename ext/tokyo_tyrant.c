@@ -87,6 +87,19 @@ extern VALUE maptovhash(TCMAP *map){
   return vhash;
 }
 
+extern VALUE maptovhashsym(TCMAP *map){
+  const char *kbuf, *vbuf;
+  int ksiz, vsiz;
+  VALUE vhash;
+  vhash = rb_hash_new();
+  tcmapiterinit(map);
+  while((kbuf = tcmapiternext(map, &ksiz)) != NULL){
+    vbuf = tcmapiterval(kbuf, &vsiz);
+    rb_hash_aset(vhash, rb_str_intern(rb_str_new(kbuf, ksiz)), rb_str_new(vbuf, vsiz));
+  }
+  return vhash;
+}
+
 extern TCMAP *varytomap(VALUE vary){
   int i;
   TCLIST *keys;

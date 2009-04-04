@@ -40,6 +40,7 @@ extern TCLIST *varytolist(VALUE vary);
 extern VALUE listtovary(TCLIST *list);
 extern TCMAP *vhashtomap(VALUE vhash);
 extern VALUE maptovhash(TCMAP *map);
+extern VALUE maptovhashsym(TCMAP *map);
 extern TCMAP *varytomap(VALUE vhash);
 extern TCLIST *vhashtolist(VALUE vhash);
 
