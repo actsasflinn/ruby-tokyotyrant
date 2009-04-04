@@ -97,6 +97,24 @@ describe TokyoTyrant::DB, "with an open database" do
     @db.fwmkeys('apples').sort.should == ["apples/grannysmith", "apples/royalgala"]
   end
 
+  it "should get all keys" do
+    keys = %w[appetizers entree dessert]
+    values = %w[chips chicken\ caeser\ salad ice\ cream]
+    keys.each_with_index do |k,i|
+      @db[k] = values[i]
+    end
+    @db.keys.should == keys
+  end
+
+  it "should get all values" do
+    keys = %w[appetizers entree dessert]
+    values = %w[chips chicken\ caeser\ salad ice\ cream]
+    keys.each_with_index do |k,i|
+      @db[k] = values[i]
+    end
+    @db.values.should == values
+  end
+
   it "should vanish all records" do
     @db['chocolate'] = 'dark'
     @db['tea'] = 'earl grey'
