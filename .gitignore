@@ -4,3 +4,6 @@ Makefile
 *.bundle
 *.o
 .\#*
+tmp/*
+pkg/*
+html/*
