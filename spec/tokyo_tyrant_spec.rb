@@ -4,7 +4,7 @@ require Pathname(__FILE__).dirname.join('spec_base') unless $root
 describe TokyoTyrant::DB, "with an open database" do
 
   before do
-    @db = TokyoTyrant::DB.new('127.0.0.1', 1978)
+    @db = TokyoTyrant::DB.new('127.0.0.1', 45000)
     @db.clear
   end
 
@@ -20,15 +20,15 @@ describe TokyoTyrant::DB, "with an open database" do
       e.message.should == 'close error: invalid operation'
     end
   end
-  
+
   it "should save a value" do
-    @db['salad'] = 'bacon bits'
-    @db['salad'].should == 'bacon bits'
+    @db[:salad] = 'bacon bits'
+    @db[:salad].should == 'bacon bits'
   end
   
   it "should return a value" do
-    @db['salad'] = 'bacon bits'
-    @db['salad'].should == 'bacon bits'
+    @db[:salad] = 'bacon bits'
+    @db[:salad].should == 'bacon bits'
   end
 
   it "should save multiple values" do
@@ -52,7 +52,7 @@ describe TokyoTyrant::DB, "with an open database" do
   end
 
   it "should out a value" do
-    k = 'tomato'
+    k = :tomato
     @db[k] = 'green'
     @db.out(k).should.be.true
     @db[k].should.be.nil
@@ -60,14 +60,14 @@ describe TokyoTyrant::DB, "with an open database" do
   end
 
   it "should get a value size" do
-    k = 'cereal'
+    k = :cereal
     v = 'granola'
     @db[k] = v
     @db.vsiz(k).should == v.size
   end
 
   it "should check a key" do
-    k = 'fruit'
+    k = :fruit
     @db[k] = 'banana'
     @db.check(k).should.be.true
     @db.out(k)
@@ -75,10 +75,10 @@ describe TokyoTyrant::DB, "with an open database" do
   end
 
   it "should iterate" do
-    @db['cheese'] = 'gouda'
-    @db['grapes'] = 'green'
-    @db['oranges'] = 'florida'
-    @db['crackers'] = 'triscuit'
+    @db[:cheese] = 'gouda'
+    @db[:grapes] = 'green'
+    @db[:oranges] = 'florida'
+    @db[:crackers] = 'triscuit'
 
     @db.iterinit.should.be.true
     @db.iternext.should == 'cheese'
