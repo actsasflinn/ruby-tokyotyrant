@@ -1,10 +1,10 @@
 require 'pathname'
 require Pathname(__FILE__).dirname.join('spec_base') unless $root
 
-describe TokyoTyrant::Table, "with an open database" do
+describe TokyoTyrant::Query, "with an open database" do
   @db = TokyoTyrant::Table.new('127.0.0.1', 45001)
   @db.clear
-  load('spec/plu_db.rb')
+  load('plu_db.rb')
   @db.mput($codes)
 
   it "should get a query object" do
@@ -14,14 +14,30 @@ describe TokyoTyrant::Table, "with an open database" do
   it "should get keys for search conditions" do
     q = @db.query
     q.addcond('type', :streq, 'Spinach')
-    q.search.sort.should == ["3332", "34173"]
+    q.search.sort.should == %w[3332 34173]
   end
 
-  it "should get ordered keys for search conditions with order" do
+  it "should get keys for negated search conditions" do
+    q = @db.query
+    q.addcond('type', '!streq', 'Spinach')
+    res = q.search
+    %w[3332 34173].each do |k|
+      res.should.not.include?(k)
+    end
+  end
+
+  it "should get ordered keys for search conditions with ascending order" do
     q = @db.query
     q.addcond('type', :streq, 'Spinach')
-    q.order_by('variety', :strasc)
+    q.setorder('variety', :strasc)
     q.search.should == ["3332", "34173"]
+  end
+
+  it "should get ordered keys for search conditions with decending order" do
+    q = @db.query
+    q.addcond('type', :streq, 'Spinach')
+    q.order_by('variety', :strdesc)
+    q.search.should == ["34173", "3332"]
   end
 
   it "should get limited keys for search conditions with limit" do
@@ -41,8 +57,15 @@ describe TokyoTyrant::Table, "with an open database" do
   end
 
   it "should remove records for conditions" do
-    @db.query.condition(:type, :streq, 'Orange').search.size.should == 11
-    @db.query.condition(:type, :streq, 'Orange').searchout.should.be.true
-    @db.query.condition(:type, :streq, 'Orange').search.size.should == 0
+    q = @db.query
+    q.addcond(:type, :streq, 'Orange')
+    q.search.size.should == 11
+    q.searchout.should.be.true
+    q.search.size.should == 0
+  end
+
+  it "should chain search options" do
+    res = @db.query.condition(:type, :streq, 'Cucumber').order_by(:variety, :strdesc).limit(3).search
+    res.should == ["4596", "4595", "4594"]
   end
 end
