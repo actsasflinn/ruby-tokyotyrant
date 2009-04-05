@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'ruby-tokyotyrant'
-  s.version = '0.1.1'
+  s.version = '0.1.2'
   s.authors = [ 'Flinn' ]
   s.email = 'flinn@actsasflinn.com'
   s.homepage = 'http://github.com/actsasflinn/ruby-tokyotyrant/'
