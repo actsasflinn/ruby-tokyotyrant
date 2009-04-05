@@ -4,6 +4,8 @@ This is a c extension for Ruby to access TokyoTyrant databases.  It currently su
 
 == Install
 
+  # install tokyocabint and tokyotyrant
+  # after installing tc and tt on linux I had to /sbin/ldconfig (as root)
   gem sources -a http://gems.github.com
   sudo gem install actsasflinn-ruby-tokyotyrant
 
@@ -44,21 +46,21 @@ This is not in production but the initial benchmarks are very interesting. Resul
   require 'tokyo_tyrant'
   t = TokyoTyrant::Table.new('127.0.0.1', 1978)
 
-  t['bar'] = { 'baz' => 'box' } # => { 'baz' => 'box' }
-  t['bar']                      # => { 'baz' => 'box' }
+  t['bar'] = { :baz => 'box' } # => { :baz => 'box' }
+  t['bar']                     # => { :baz => 'box' }
 
   t.each{ |k,v| puts [k, v].inspect }
-  # ["bar", {"baz"=>"box"}]
+  # ["bar", {:baz=>"box"}]
   # => nil
 
   # bulk operations
   h = {}
   100.times do |i|
-    h[i] = { 'name' => 'Pat', 'sex' => i % 2 > 0 ? 'male' : 'female' }
+    h[i] = { :name => 'Pat', :sex => i % 2 > 0 ? 'male' : 'female' }
   end
   t.mput(h)
   t.mget(0..3)
-  # => {"0"=>{"name"=>"Pat", "sex"=>"female"}, "1"=>{"name"=>"Pat", "sex"=>"male"}, "2"=>{"name"=>"Pat", "sex"=>"female"}, "3"=>{"name"=>"Pat", "sex"=>"male"}}
+  # => {"0"=>{:name=>"Pat", :sex=>"female"}, "1"=>{:name=>"Pat", :sex=>"male"}, "2"=>{:name=>"Pat", :sex=>"female"}, "3"=>{:name=>"Pat", :sex=>"male"}}
 
 === Table Query
 
