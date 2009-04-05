@@ -146,13 +146,17 @@ VALUE cQuery;
 
 void Init_tokyo_tyrant(){
   mTokyoTyrant = rb_define_module("TokyoTyrant");
-
   eTokyoTyrantError = rb_define_class("TokyoTyrantError", rb_eStandardError);
-  cDB = rb_define_class_under(mTokyoTyrant, "DB", rb_cObject);
-  cTable = rb_define_class_under(mTokyoTyrant, "Table", cDB);
-  cQuery = rb_define_class_under(mTokyoTyrant, "Query", rb_cObject);
+  init_mod();
 
+  cDB = rb_define_class_under(mTokyoTyrant, "DB", rb_cObject);
+  rb_include_module(cDB, mTokyoTyrant);
   init_db();
+
+  cTable = rb_define_class_under(mTokyoTyrant, "Table", rb_cObject);
+  rb_include_module(cTable, mTokyoTyrant);
   init_table();
+
+  cQuery = rb_define_class_under(mTokyoTyrant, "Query", rb_cObject);
   init_query();
 }

@@ -63,18 +63,6 @@ describe TokyoTyrant::Table, "with an open database" do
     @db.out(k).should.be.false
   end
 
-=begin
-  # not sure this should make it to the table db,
-  # if so it needs to actually pull the record,
-  # which makes it kind of ineffecient
-  it "should get a value size" do
-    k = :cereal
-    v = { :name => 'granola', :size => '10oz' }
-    @db[k] = v
-    @db.vsiz(k).should == v.size
-  end
-=end
-
   it "should check a key" do
     k = :fruit
     @db[k] = { :name => 'banana', :code => '4011' }

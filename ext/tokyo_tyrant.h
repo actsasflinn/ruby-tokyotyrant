@@ -7,6 +7,7 @@
 #include <time.h>
 #include <locale.h>
 #include <tcrdb.h>
+#include <tokyo_tyrant_module.h>
 #include <tokyo_tyrant_db.h>
 #include <tokyo_tyrant_table.h>
 #include <tokyo_tyrant_query.h>
