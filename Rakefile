@@ -28,11 +28,13 @@ end
 Rake::PackageTask.new('ruby-tokyotyrant', '0.1') do |pkg|
   pkg.need_zip = true
   pkg.package_files = FileList[
+    'COPYING',
     'Rakefile',
-    '*.txt',
+    'Readme.*',
     'lib/**/*',
+    'ext/**/*',
     'spec/**/*',
-    'test/**/*'
+    'benchmarks/**/*'
   ].to_a
   class << pkg
     def package_name
