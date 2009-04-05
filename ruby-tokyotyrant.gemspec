@@ -12,6 +12,11 @@ Gem::Specification.new do |s|
   s.has_rdoc = true
   s.extra_rdoc_files = %w{ README.rdoc }
 
-  s.files = Dir['lib/**/*.c'] + Dir['*.txt']
+  s.files = ['COPYING',
+             'Rakefile',
+             'README.rdoc'] +
+            Dir['ext/**/*'] +
+            Dir['spec/**/*'] +
+            Dir['benchmarks/**/*']
 end
 

@@ -30,8 +30,7 @@ Rake::PackageTask.new('ruby-tokyotyrant', '0.1') do |pkg|
   pkg.package_files = FileList[
     'COPYING',
     'Rakefile',
-    'Readme.*',
-    'lib/**/*',
+    'README.rdoc',
     'ext/**/*',
     'spec/**/*',
     'benchmarks/**/*'
