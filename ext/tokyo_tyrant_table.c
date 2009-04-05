@@ -234,6 +234,10 @@ static VALUE cTable_values(VALUE vself){
   return vary;
 }
 
+static VALUE cTable_query(VALUE vself){
+  return rb_class_new_instance(1, &vself, rb_path2class("TokyoTyrant::Query"));
+}
+
 void init_table(){
   rb_define_method(cTable, "mput", cTable_mput, 1);
   rb_define_method(cTable, "put", cTable_put, 2);
@@ -251,4 +255,5 @@ void init_table(){
   rb_define_alias(cTable, "each_pair", "each");
   rb_define_method(cTable, "each_value", cTable_each_value, 0);
   rb_define_method(cTable, "values", cTable_values, 0);
+  rb_define_method(cTable, "query", cTable_query, 0);
 }

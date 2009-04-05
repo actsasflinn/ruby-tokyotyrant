@@ -31,7 +31,7 @@ static VALUE cQuery_addcond(VALUE vself, VALUE vname, VALUE vop, VALUE vexpr){
   vqry = rb_iv_get(vself, RDBQRYVNDATA);
   Data_Get_Struct(vqry, RDBQRY, qry);
   tcrdbqryaddcond(qry, RSTRING_PTR(vname), NUM2INT(vop), RSTRING_PTR(vexpr));
-  return Qnil;
+  return vself;
 }
 
 static VALUE cQuery_setorder(VALUE vself, VALUE vname, VALUE vtype){
@@ -43,14 +43,14 @@ static VALUE cQuery_setorder(VALUE vself, VALUE vname, VALUE vtype){
 
   if (TYPE(vtype) == T_STRING){
     vtype = StringValueEx(vtype);
-    vtype = tctdbqrystrtocondop(RSTRING_PTR(toupper(vtype)));
+    vtype = tctdbqrystrtoordertype(RSTRING_PTR(toupper(vtype)));
     vtype = INT2NUM(vtype);
   }
 
   vqry = rb_iv_get(vself, RDBQRYVNDATA);
   Data_Get_Struct(vqry, RDBQRY, qry);
   tcrdbqrysetorder(qry, RSTRING_PTR(vname), NUM2INT(vtype));
-  return Qnil;
+  return vself;
 }
 
 static VALUE cQuery_setmax(VALUE vself, VALUE vmax){
@@ -59,7 +59,7 @@ static VALUE cQuery_setmax(VALUE vself, VALUE vmax){
   vqry = rb_iv_get(vself, RDBQRYVNDATA);
   Data_Get_Struct(vqry, RDBQRY, qry);
   tcrdbqrysetmax(qry, NUM2INT(vmax));
-  return Qnil;
+  return vself;
 }
 
 static VALUE cQuery_search(VALUE vself){
@@ -83,7 +83,7 @@ static VALUE cQuery_searchout(VALUE vself){
 }
 
 static VALUE cQuery_get(VALUE vself){
-  int i, num;
+  int i, num, ksiz;
   const char *name, *col;
   VALUE vqry, vary, vcols;
   RDBQRY *qry;
@@ -100,12 +100,10 @@ static VALUE cQuery_get(VALUE vself){
     cols = tcrdbqryrescols(res, i);
     if(cols){
       tcmapiterinit(cols);
-      while((name = tcmapiternext2(cols)) != NULL){
-        // currently this leave the pkey in the hash with a blank key
-        // what's better, leave it as a blank key or add this as __id
-        // or something similar?
+      while((name = tcmapiternext(cols, &ksiz)) != NULL){
         col = tcmapget2(cols, name);
-        rb_hash_aset(vcols, rb_str_new2(name), rb_str_new2(col));
+        if (ksiz == 0) name = "__id";
+        rb_hash_aset(vcols, ID2SYM(rb_intern(name)), rb_str_new2(col));
       }
     }
     tcmapdel(cols);
