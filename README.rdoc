@@ -2,6 +2,11 @@
 
 This is a c extension for Ruby to access TokyoTyrant databases.  It currently supports key/value, table databases and table queries.
 
+== Install
+
+  gem sources -a http://gems.github.com
+  sudo gem install actsasflinn-ruby-tokyotyrant
+
 == Performance
 
 This is not in production but the initial benchmarks are very interesting. Results look closer to the memcached gem than any other tyrant client I've seen for Ruby.
