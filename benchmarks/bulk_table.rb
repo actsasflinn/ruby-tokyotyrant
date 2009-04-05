@@ -3,6 +3,8 @@ require 'rubygems'
 require 'faker'
 require 'date'
 
+puts "Tokyo Tyrant Bulk Table Operations Benchmark"
+
 $year = (1909 .. 2009).to_a
 $month = (1..12).to_a
 $day = (1..28).to_a # not bothering with month diffs
@@ -32,7 +34,7 @@ data = {}
 end
 
 require 'tokyo_tyrant'
-t = TokyoTyrant::Table.new('127.0.0.1', 1978)
+t = TokyoTyrant::Table.new('127.0.0.1', 45001)
 t.clear
 
 2.times { puts }
@@ -51,7 +53,7 @@ end
 require 'tokyotyrant'
 
 rdb = TokyoTyrant::RDB::new
-rdb.open("127.0.0.1", 1978)
+rdb.open("127.0.0.1", 45001)
 rdb.clear
 
 2.times { puts }

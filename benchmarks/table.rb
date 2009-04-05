@@ -62,7 +62,7 @@ data1 = data.collect { |e|
 
 require 'rufus/tokyo/tyrant'
 
-r = Rufus::Tokyo::TyrantTable.new('127.0.0.1', 1978)
+r = Rufus::Tokyo::TyrantTable.new('127.0.0.1', 45001)
 r.clear
 
 2.times { puts }
@@ -81,7 +81,7 @@ end
 require 'tokyotyrant'
 
 rdb = TokyoTyrant::RDBTBL::new
-rdb.open("127.0.0.1", 1978)
+rdb.open("127.0.0.1", 45001)
 rdb.clear
 
 2.times { puts }
@@ -98,7 +98,7 @@ Benchmark.benchmark(' ' * 20 + Benchmark::Tms::CAPTION, 20) do |b|
 end
 
 require 'tokyo_tyrant'
-t = TokyoTyrant::Table.new('127.0.0.1', 1978)
+t = TokyoTyrant::Table.new('127.0.0.1', 45001)
 t.clear
 
 2.times { puts }

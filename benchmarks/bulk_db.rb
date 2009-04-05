@@ -18,7 +18,7 @@ end
 require 'tokyotyrant'
 
 rdb = TokyoTyrant::RDB::new
-rdb.open("127.0.0.1", 1978)
+rdb.open("127.0.0.1", 45000)
 rdb.clear
 nothing = nil
 
@@ -36,7 +36,7 @@ Benchmark.benchmark(' ' * 20 + Benchmark::Tms::CAPTION, 20) do |b|
 end
 
 require 'tokyo_tyrant'
-t = TokyoTyrant::DB.new('127.0.0.1', 1978)
+t = TokyoTyrant::DB.new('127.0.0.1', 45000)
 t.clear
 nothing = nil
 

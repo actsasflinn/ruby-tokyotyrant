@@ -10,7 +10,7 @@ end
 
 require 'rufus/tokyo/tyrant'
 
-r = Rufus::Tokyo::Tyrant.new('127.0.0.1', 1978)
+r = Rufus::Tokyo::Tyrant.new('127.0.0.1', 45000)
 r.clear
 
 2.times { puts }
@@ -29,7 +29,7 @@ end
 require 'tokyotyrant'
 
 rdb = TokyoTyrant::RDB::new
-rdb.open("127.0.0.1", 1978)
+rdb.open("127.0.0.1", 45000)
 rdb.clear
 
 2.times { puts }
@@ -46,7 +46,7 @@ Benchmark.benchmark(' ' * 20 + Benchmark::Tms::CAPTION, 20) do |b|
 end
 
 require 'tokyo_tyrant'
-t = TokyoTyrant::DB.new('127.0.0.1', 1978)
+t = TokyoTyrant::DB.new('127.0.0.1', 45000)
 t.clear
 
 2.times { puts }
@@ -63,7 +63,7 @@ Benchmark.benchmark(' ' * 20 + Benchmark::Tms::CAPTION, 20) do |b|
 end
 
 require 'memcached'
-m = Memcached.new('127.0.0.1:1978')
+m = Memcached.new('127.0.0.1:45000')
 m.flush
 
 2.times { puts }
