@@ -18,5 +18,6 @@ Gem::Specification.new do |s|
             Dir['ext/**/*'] +
             Dir['spec/**/*'] +
             Dir['benchmarks/**/*']
+  s.extensions << "ext/extconf.rb"
 end
 
