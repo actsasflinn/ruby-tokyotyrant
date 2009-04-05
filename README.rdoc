@@ -1,6 +1,6 @@
 = TokyoTyrant Ruby Client
 
-This is an _EXPERIMENTAL_ c extension for Ruby to access TokyoTyrant databases.  It currently supports key/value, table databases and table queries.
+This is a c extension for Ruby to access TokyoTyrant databases.  It currently supports key/value, table databases and table queries.
 
 == Performance
 
@@ -61,20 +61,22 @@ This is not in production but the initial benchmarks are very interesting. Resul
   t = TokyoTyrant::Table.new('127.0.0.1', 1978)
 
   100.times do |i|
-    t[i] = { 'name' => 'Pat', 'sex' => i % 2 > 0 ? 'male' : 'female' }
+    t[i] = { 'name' => "Pat #{i}", 'sex' => i % 2 > 0 ? 'male' : 'female' }
   end
 
-  q = TokyoTyrant::Query.new(t)
-  q.addcond('sex', :streq, 'male')
+  q = t.query
+  q.condition('sex', :streq, 'male')
   q.limit(5)
   # Get a list of IDs
   ids = q.search
   # => ["1", "3", "5", "7", "9"]
+  q.order_by(:name, :strdesc)
+  ids = q.search
+  # => ["99", "97", "95", "93", "91"]
   # Get the actual records
   q.get
-  # => [{"name"=>"Pat", ""=>"1", "sex"=>"male"}, {"name"=>"Pat", ""=>"3", "sex"=>"male"}, {"name"=>"Pat", ""=>"5", "sex"=>"male"}, {"name"=>"Pat", ""=>"7", "sex"=>"male"}, {"name"=>"Pat", ""=>"9", "sex"=>"male"}]
+  # => [{:__id=>"99", :sex=>"male", :name=>"Pat 99"}, {:__id=>"97", :sex=>"male", :name=>"Pat 97"}, {:__id=>"95", :sex=>"male", :name=>"Pat 95"}, {:__id=>"93", :sex=>"male", :name=>"Pat 93"}, {:__id=>"91", :sex=>"male", :name=>"Pat 91"}]
 
 == TODO
 * implement get_reverse for has_value?
 * fix up and test extensions
-* Query DB Specs
