@@ -95,7 +95,7 @@ extern VALUE maptovhashsym(TCMAP *map){
   tcmapiterinit(map);
   while((kbuf = tcmapiternext(map, &ksiz)) != NULL){
     vbuf = tcmapiterval(kbuf, &vsiz);
-    rb_hash_aset(vhash, rb_str_intern(rb_str_new(kbuf, ksiz)), rb_str_new(vbuf, vsiz));
+    rb_hash_aset(vhash, ID2SYM(rb_intern(kbuf)), rb_str_new(vbuf, vsiz));
   }
   return vhash;
 }
