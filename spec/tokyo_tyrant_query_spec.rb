@@ -4,7 +4,7 @@ require Pathname(__FILE__).dirname.join('spec_base') unless $root
 describe TokyoTyrant::Query, "with an open database" do
   @db = TokyoTyrant::Table.new('127.0.0.1', 45001)
   @db.clear
-  load('plu_db.rb')
+  load('spec/plu_db.rb')
   @db.mput($codes)
 
   it "should get a query object" do
@@ -67,5 +67,25 @@ describe TokyoTyrant::Query, "with an open database" do
   it "should chain search options" do
     res = @db.query.condition(:type, :streq, 'Cucumber').order_by(:variety, :strdesc).limit(3).search
     res.should == ["4596", "4595", "4594"]
+  end
+
+  it "should query with a block" do
+    res = @db.query do |q|
+      q.condition(:type, :streq, 'Cucumber')
+      q.order_by(:variety, :strdesc)
+      q.limit(3)
+    end
+    res.should == ["4596", "4595", "4594"]
+  end
+
+  it "should find with a block" do
+    res = @db.find do |q|
+      q.condition(:type, :streq, 'Cucumber')
+      q.order_by(:variety, :strdesc)
+      q.limit(3)
+    end
+    res.should == [{:type=>"Cucumber", :variety=>"Pickling / Gherkin", :__id=>"4596", :code=>"4596"},
+                   {:type=>"Cucumber", :variety=>"Lemon", :__id=>"4595", :code=>"4595"},
+                   {:type=>"Cucumber", :variety=>"Japanese / White", :__id=>"4594", :code=>"4594"}]
   end
 end

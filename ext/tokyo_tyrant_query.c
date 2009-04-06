@@ -138,12 +138,14 @@ void init_query(){
 
   rb_define_private_method(cQuery, "initialize", cQuery_initialize, 1);
   rb_define_method(cQuery, "addcond", cQuery_addcond, 3);
+  rb_define_alias(cQuery, "add_condition", "addcond");
   rb_define_alias(cQuery, "condition", "addcond");
   rb_define_method(cQuery, "setorder", cQuery_setorder, 2);
   rb_define_alias(cQuery, "order_by", "setorder");
   rb_define_method(cQuery, "setmax", cQuery_setmax, 1);
   rb_define_alias(cQuery, "limit", "setmax");
   rb_define_method(cQuery, "search", cQuery_search, 0);
+  rb_define_alias(cQuery, "run", "search");
   rb_define_method(cQuery, "searchout", cQuery_searchout, 0);
   rb_define_method(cQuery, "get", cQuery_get, 0);
 }

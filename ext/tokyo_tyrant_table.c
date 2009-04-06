@@ -234,8 +234,25 @@ static VALUE cTable_values(VALUE vself){
   return vary;
 }
 
+// Probably should dry these up
 static VALUE cTable_query(VALUE vself){
-  return rb_class_new_instance(1, &vself, rb_path2class("TokyoTyrant::Query"));
+  VALUE vqry, vary;
+  vqry = rb_class_new_instance(1, &vself, rb_path2class("TokyoTyrant::Query"));
+  if(rb_block_given_p()) {
+    rb_yield_values(1, vqry);
+    vary = rb_funcall(vqry, rb_intern("run"), 0);
+    return vary;
+  } else {
+    return vqry;
+  }
+}
+
+static VALUE cTable_find(VALUE vself){
+  VALUE vqry, vary;
+  vqry = rb_class_new_instance(1, &vself, rb_path2class("TokyoTyrant::Query"));
+  if(rb_block_given_p()) rb_yield_values(1, vqry);
+  vary = rb_funcall(vqry, rb_intern("get"), 0);
+  return vary;
 }
 
 void init_table(){
@@ -250,10 +267,12 @@ void init_table(){
   rb_define_alias(cTable, "[]", "get");
   rb_define_method(cTable, "setindex", cTable_setindex, 2);
   rb_define_method(cTable, "genuid", cTable_genuid, 0);
+  rb_define_alias(cTable, "generate_unique_id", "genuid");
   rb_define_method(cTable, "fetch", cTable_fetch, -1);
   rb_define_method(cTable, "each", cTable_each, 0);
   rb_define_alias(cTable, "each_pair", "each");
   rb_define_method(cTable, "each_value", cTable_each_value, 0);
   rb_define_method(cTable, "values", cTable_values, 0);
   rb_define_method(cTable, "query", cTable_query, 0);
+  rb_define_method(cTable, "find", cTable_find, 0);
 }
