@@ -44,7 +44,7 @@ static VALUE cTable_mput(VALUE vself, VALUE vhash){
   int i, num, j;
   VALUE vary, vkeys, vkey, vval;
   TCRDB *db;
-  TCLIST *list;
+  TCLIST *list, *result;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
 
   vkeys = rb_funcall(vhash, rb_intern("keys"), 0);
@@ -67,11 +67,13 @@ static VALUE cTable_mput(VALUE vself, VALUE vhash){
       tcxstrcat(xstr, rbuf, rsiz);
     }
     tclistpush(list, tcxstrptr(xstr), tcxstrsize(xstr));
+    tclistdel(cols);
     tcxstrdel(xstr);
   }
-  list = tcrdbmisc(db, "putlist", 0, list);
-  vary = listtovary(list);
+  result = tcrdbmisc(db, "putlist", 0, list);
   tclistdel(list);
+  vary = listtovary(result);
+  tclistdel(result);
   return vary;
 }
 
