@@ -110,6 +110,7 @@ extern TCMAP *varytomap(VALUE vary){
     const char *kbuf = tclistval(keys, i, &ksiz);
     tcmapput(recs, kbuf, ksiz, "", 0);
   }
+  tclistdel(keys);
   return recs;
 }
 
