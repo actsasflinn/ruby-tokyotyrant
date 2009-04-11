@@ -84,6 +84,33 @@ This is not in production but the initial benchmarks are very interesting. Resul
   q.get
   # => [{:__id=>"99", :sex=>"male", :name=>"Pat 99"}, {:__id=>"97", :sex=>"male", :name=>"Pat 97"}, {:__id=>"95", :sex=>"male", :name=>"Pat 95"}, {:__id=>"93", :sex=>"male", :name=>"Pat 93"}, {:__id=>"91", :sex=>"male", :name=>"Pat 91"}]
 
+  # Alternative Syntax (better)
+
+  # Query using a block
+  t.query{ |q|
+    q.condition('sex', :streq, 'male')
+    q.limit(5)
+  }
+  # => ["1", "3", "5", "7", "9"]
+
+  # Get records for a query
+  t.find{ |q|
+    q.condition('sex', :streq, 'male')
+    q.limit(5)
+  }
+  # => [{:sex=>"male", :name=>"Pat 1", :__id=>"1"}, {:sex=>"male", :name=>"Pat 3", :__id=>"3"}, {:sex=>"male", :name=>"Pat 5", :__id=>"5"}, {:sex=>"male", :name=>"Pat 7", :__id=>"7"}, {:sex=>"male", :name=>"Pat 9", :__id=>"9"}]
+
+  # Prepare but don't run a search, return a prepared query object
+  q = t.prepare_query{ |q|
+    q.condition('sex', :streq, 'male')
+    q.limit(5)
+  }
+  # => #<TokyoTyrant::Query:0x247c14 @rdb=#<Object:0x2800a0>, @rdbquery=#<Object:0x247c00>>
+  q.search
+  # => ["1", "3", "5", "7", "9"]
+  q.get
+  # => [{:sex=>"male", :name=>"Pat 1", :__id=>"1"}, {:sex=>"male", :name=>"Pat 3", :__id=>"3"}, {:sex=>"male", :name=>"Pat 5", :__id=>"5"}, {:sex=>"male", :name=>"Pat 7", :__id=>"7"}, {:sex=>"male", :name=>"Pat 9", :__id=>"9"}]
+
 == TODO
 * implement get_reverse for has_value?
 * fix up and test extensions
