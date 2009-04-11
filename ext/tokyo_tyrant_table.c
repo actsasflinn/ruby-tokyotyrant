@@ -138,6 +138,7 @@ static VALUE cTable_mget(int argc, VALUE *argv, VALUE vself){
     vbuf = tcmapiterval(kbuf, &vsiz);
     cols = tcstrsplit4(vbuf, vsiz);
     vcols = maptovhashsym(cols);
+    tcmapdel(cols);
     rb_hash_aset(vhash, rb_str_new(kbuf, ksiz), vcols);
   }
   tcmapdel(recs);
@@ -235,6 +236,13 @@ static VALUE cTable_values(VALUE vself){
 }
 
 // Probably should dry these up
+static VALUE cTable_prepare_query(VALUE vself){
+  VALUE vqry;
+  vqry = rb_class_new_instance(1, &vself, rb_path2class("TokyoTyrant::Query"));
+  if(rb_block_given_p()) rb_yield_values(1, vqry);
+  return vqry;
+}
+
 static VALUE cTable_query(VALUE vself){
   VALUE vqry, vary;
   vqry = rb_class_new_instance(1, &vself, rb_path2class("TokyoTyrant::Query"));
@@ -273,6 +281,7 @@ void init_table(){
   rb_define_alias(cTable, "each_pair", "each");
   rb_define_method(cTable, "each_value", cTable_each_value, 0);
   rb_define_method(cTable, "values", cTable_values, 0);
+  rb_define_method(cTable, "prepare_query", cTable_prepare_query, 0);
   rb_define_method(cTable, "query", cTable_query, 0);
   rb_define_method(cTable, "find", cTable_find, 0);
 }
