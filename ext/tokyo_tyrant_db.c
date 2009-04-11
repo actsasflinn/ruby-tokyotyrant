@@ -48,6 +48,7 @@ static VALUE cDB_mput(VALUE vself, VALUE vhash){
   args = vhashtolist(vhash);
   list = tcrdbmisc(db, "putlist", 0, args);
   vary = listtovary(list);
+  tclistdel(args);
   tclistdel(list);
   return vary;
 }
