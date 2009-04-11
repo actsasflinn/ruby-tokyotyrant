@@ -233,6 +233,7 @@ static VALUE cTable_values(VALUE vself){
     cols = tcrdbtblget(db, kxstr, ksiz);
     rb_ary_push(vary, maptovhashsym(cols));
     tcmapdel(cols);
+    tcfree(kxstr);
   }
   return vary;
 }

@@ -182,6 +182,8 @@ static VALUE cDB_each(VALUE vself){
   while((kxstr = tcrdbiternext2(db)) != NULL){
     vxstr = tcrdbget2(db, kxstr);
     vrv = rb_yield_values(2, rb_str_new2(kxstr), rb_str_new2(vxstr));
+    tcfree(vxstr);
+    tcfree(kxstr);
   }
   return vrv;
 }
@@ -197,6 +199,8 @@ static VALUE cDB_each_value(VALUE vself){
   while((kxstr = tcrdbiternext2(db)) != NULL){
     vxstr = tcrdbget2(db, kxstr);
     vrv = rb_yield_values(1, rb_str_new2(vxstr));
+    tcfree(vxstr);
+    tcfree(kxstr);
   }
   return vrv;
 }
@@ -211,6 +215,8 @@ static VALUE cDB_values(VALUE vself){
   while((kxstr = tcrdbiternext2(db)) != NULL){
     vxstr = tcrdbget2(db, kxstr);
     rb_ary_push(vary, rb_str_new2(vxstr));
+    tcfree(vxstr);
+    tcfree(kxstr);
   }
   return vary;
 }
