@@ -177,4 +177,20 @@ describe TokyoTyrant::DB, "with an open database" do
       i = i += 1
     end
   end
+
+  it "should add serialized integer values" do
+    key = 'counter'
+    @db.out(key)
+    @db.add_int(key, 1).should == 1
+    @db.add_int(key, 1).should == 2
+    @db.get_int(key).should == 2
+  end
+
+  it "should add serialized double values" do
+    key = 'counter'
+    @db.out(key)
+    @db.add_double(key, 1.0).should.be.close?(1.0, 0.005)
+    @db.add_double(key, 1.0).should.be.close?(2.0, 0.005)
+    @db.get_double(key).should.be.close?(2.0, 0.005)
+  end
 end

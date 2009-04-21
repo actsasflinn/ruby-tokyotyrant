@@ -134,26 +134,6 @@ static VALUE cDB_vsiz(VALUE vself, VALUE vkey){
   return INT2NUM(tcrdbvsiz2(db, RSTRING_PTR(vkey)));
 }
 
-static VALUE cDB_addint(VALUE vself, VALUE vkey, VALUE vnum){
-  int num;
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
-  vkey = StringValueEx(vkey);
-
-  num = tcrdbaddint(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), NUM2INT(vnum));
-  return num == INT_MIN ? Qnil : INT2NUM(num);
-}
-
-static VALUE cDB_adddouble(VALUE vself, VALUE vkey, VALUE vnum){
-  double num;
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
-
-  vkey = StringValueEx(vkey);
-  num = tcrdbadddouble(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), NUM2DBL(vnum));
-  return isnan(num) ? Qnil : rb_float_new(num);
-}
-
 static VALUE cDB_fetch(int argc, VALUE *argv, VALUE vself){
   VALUE vkey, vdef, vval;
   TCRDB *db;
@@ -238,8 +218,6 @@ void init_db(){
   rb_define_alias(cDB, "has_value?", "check_value");
   rb_define_alias(cDB, "value?", "check_value");
   */
-  rb_define_method(cDB, "addint", cDB_addint, 2);
-  rb_define_method(cDB, "adddouble", cDB_adddouble, 2);
 
   rb_define_method(cDB, "fetch", cDB_fetch, -1);
   rb_define_method(cDB, "each", cDB_each, 0);

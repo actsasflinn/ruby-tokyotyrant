@@ -138,6 +138,34 @@ static VALUE mTokyoTyrant_keys(VALUE vself){
   return vary;
 }
 
+static VALUE mTokyoTyrant_add_int(VALUE vself, VALUE vkey, VALUE vnum){
+  int num;
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  vkey = StringValueEx(vkey);
+
+  num = tcrdbaddint(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), NUM2INT(vnum));
+  return num == INT_MIN ? Qnil : INT2NUM(num);
+}
+
+static VALUE mTokyoTyrant_get_int(VALUE vself, VALUE vkey){
+  return mTokyoTyrant_add_int(vself, vkey, INT2NUM(0));
+}
+
+static VALUE mTokyoTyrant_add_double(VALUE vself, VALUE vkey, VALUE vnum){
+  double num;
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+
+  vkey = StringValueEx(vkey);
+  num = tcrdbadddouble(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), NUM2DBL(vnum));
+  return isnan(num) ? Qnil : rb_float_new(num);
+}
+
+static VALUE mTokyoTyrant_get_double(VALUE vself, VALUE vkey){
+  return mTokyoTyrant_add_double(vself, vkey, INT2NUM(0));
+}
+
 // TODO: Give this more attention, it's untested and needs defaults for scan_args
 static VALUE mTokyoTyrant_ext(int argc, VALUE *argv, VALUE vself){
   const char *res;
@@ -280,6 +308,10 @@ void init_mod(){
   rb_define_method(mTokyoTyrant, "iternext", mTokyoTyrant_iternext, 0);
   rb_define_method(mTokyoTyrant, "fwmkeys", mTokyoTyrant_fwmkeys, -1);
   rb_define_method(mTokyoTyrant, "keys", mTokyoTyrant_keys, 0);
+  rb_define_method(mTokyoTyrant, "add_int", mTokyoTyrant_add_int, 2);
+  rb_define_method(mTokyoTyrant, "get_int", mTokyoTyrant_get_int, 1);
+  rb_define_method(mTokyoTyrant, "add_double", mTokyoTyrant_add_double, 2);
+  rb_define_method(mTokyoTyrant, "get_double", mTokyoTyrant_get_double, 1);
   rb_define_method(mTokyoTyrant, "ext", mTokyoTyrant_ext, -1);
   rb_define_method(mTokyoTyrant, "sync", mTokyoTyrant_sync, 0);
   rb_define_method(mTokyoTyrant, "vanish", mTokyoTyrant_vanish, 0);
