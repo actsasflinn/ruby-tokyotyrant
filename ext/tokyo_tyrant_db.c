@@ -203,6 +203,7 @@ static VALUE cDB_values(VALUE vself){
 
 void init_db(){
   rb_define_method(cDB, "mput", cDB_mput, 1);
+  rb_define_alias(cDB, "lput", "mput");       // Rufus Compat
   rb_define_method(cDB, "put", cDB_put, 2);
   rb_define_alias(cDB, "[]=", "put");
   rb_define_method(cDB, "putkeep", cDB_putkeep, 2);
@@ -212,6 +213,7 @@ void init_db(){
   rb_define_method(cDB, "get", cDB_get, 1);
   rb_define_alias(cDB, "[]", "get");
   rb_define_method(cDB, "mget", cDB_mget, -1);
+  rb_define_alias(cDB, "lget", "mget");       // Rufus Compat
   rb_define_method(cDB, "vsiz", cDB_vsiz, 1);
   /*
   rb_define_method(cDB, "check_value", cDB_check_value, 1);

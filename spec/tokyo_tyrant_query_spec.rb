@@ -88,4 +88,9 @@ describe TokyoTyrant::Query, "with an open database" do
                    {:type=>"Cucumber", :variety=>"Lemon", :__id=>"4595", :code=>"4595"},
                    {:type=>"Cucumber", :variety=>"Japanese / White", :__id=>"4594", :code=>"4594"}]
   end
+
+  it "should show query count" do
+    res = @db.prepare_query{ |q| q.condition(:type, :streq, 'Cucumber') }.count
+    res.should == 5
+  end
 end

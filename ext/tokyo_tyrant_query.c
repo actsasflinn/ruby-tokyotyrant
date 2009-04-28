@@ -82,6 +82,14 @@ static VALUE cQuery_searchout(VALUE vself){
   return tcrdbqrysearchout(qry) ? Qtrue : Qfalse;
 }
 
+static VALUE cQuery_searchcount(VALUE vself){
+  VALUE vqry;
+  RDBQRY *qry;
+  vqry = rb_iv_get(vself, RDBQRYVNDATA);
+  Data_Get_Struct(vqry, RDBQRY, qry);
+  return LL2NUM(tcrdbqrysearchcount(qry));
+}
+
 static VALUE cQuery_get(VALUE vself){
   int i, num, ksiz;
   const char *name, *col;
@@ -140,12 +148,16 @@ void init_query(){
   rb_define_method(cQuery, "addcond", cQuery_addcond, 3);
   rb_define_alias(cQuery, "add_condition", "addcond");
   rb_define_alias(cQuery, "condition", "addcond");
+  rb_define_alias(cQuery, "add", "addcond");                    // Rufus Compat
   rb_define_method(cQuery, "setorder", cQuery_setorder, 2);
-  rb_define_alias(cQuery, "order_by", "setorder");
+  rb_define_alias(cQuery, "order_by", "setorder");              // Rufus Compat
   rb_define_method(cQuery, "setmax", cQuery_setmax, 1);
-  rb_define_alias(cQuery, "limit", "setmax");
+  rb_define_alias(cQuery, "limit", "setmax");                   // Rufus Compat
   rb_define_method(cQuery, "search", cQuery_search, 0);
   rb_define_alias(cQuery, "run", "search");
   rb_define_method(cQuery, "searchout", cQuery_searchout, 0);
+  rb_define_alias(cQuery, "delete", "searchout");               // Rufus Compat
+  rb_define_method(cQuery, "searchcount", cQuery_searchcount, 0);
+  rb_define_alias(cQuery, "count", "searchcount");              // Rufus Compat
   rb_define_method(cQuery, "get", cQuery_get, 0);
 }

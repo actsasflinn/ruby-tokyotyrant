@@ -134,7 +134,7 @@ describe TokyoTyrant::Table, "with an open database" do
 
   it "should report db size" do
     @db['rootbeer'] = { :gourmet => 'Virgils', :natural => 'Hansens' }
-    @db.size.should == 528768
+    @db.db_size.should == 528768
   end
 
   it "should fetch a record" do
@@ -206,5 +206,14 @@ describe TokyoTyrant::Table, "with an open database" do
     @db.add_double(key, 1.0).should.be.close?(2.0, 0.005)
     @db.get_double(key).should.be.close?(2.0, 0.005)
     @db[key].should == { :title => 'Bean Counter', :_num => "2" }
+  end
+
+  it "should set an index" do
+    key = 'counter'
+    50.times do |i|
+      @db["key#{i}"] = { :title => %w{rice beans corn}.sort_by{rand}.first,
+                         :description => 'a whole protein' }
+    end
+    @db.set_index(:title, :lexical).should.be.true
   end
 end

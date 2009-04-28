@@ -283,6 +283,7 @@ void init_mod(){
   rb_define_method(mTokyoTyrant, "errmsg", mTokyoTyrant_errmsg, -1);
   rb_define_method(mTokyoTyrant, "ecode", mTokyoTyrant_ecode, 0);
   rb_define_method(mTokyoTyrant, "out", mTokyoTyrant_out, 1);
+  rb_define_alias(mTokyoTyrant, "delete", "out");                 // Rufus Compat
   rb_define_method(mTokyoTyrant, "check", mTokyoTyrant_check, 1);
   rb_define_alias(mTokyoTyrant, "has_key?", "check");
   rb_define_alias(mTokyoTyrant, "key?", "check");
@@ -305,7 +306,8 @@ void init_mod(){
   rb_define_method(mTokyoTyrant, "rnum", mTokyoTyrant_rnum, 0);
   rb_define_alias(mTokyoTyrant, "count", "rnum");
   rb_define_method(mTokyoTyrant, "empty?", mTokyoTyrant_empty, 0);
-  rb_define_method(mTokyoTyrant, "size", mTokyoTyrant_size, 0);
+  rb_define_alias(mTokyoTyrant, "size", "rnum");                    // Rufus Compat
+  rb_define_method(mTokyoTyrant, "db_size", mTokyoTyrant_size, 0);  // Rufus Compat
   rb_define_alias(mTokyoTyrant, "length", "size");
   rb_define_method(mTokyoTyrant, "stat", mTokyoTyrant_stat, 0);
   rb_define_method(mTokyoTyrant, "misc", mTokyoTyrant_misc, -1);

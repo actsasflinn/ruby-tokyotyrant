@@ -150,7 +150,15 @@ static VALUE cTable_mget(int argc, VALUE *argv, VALUE vself){
 static VALUE cTable_setindex(VALUE vself, VALUE vname, VALUE vtype){
   TCRDB *db;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
-  Check_Type(vname, T_STRING);
+  vname = StringValueEx(vname);
+  if (TYPE(vtype) == T_SYMBOL) vtype = rb_str_new2(rb_id2name(SYM2ID(vtype)));
+
+  if (TYPE(vtype) == T_STRING){
+    vtype = StringValueEx(vtype);
+    vtype = tctdbstrtoindextype(RSTRING_PTR(toupper(vtype)));
+    vtype = INT2NUM(vtype);
+  }
+
   return tcrdbtblsetindex(db, RSTRING_PTR(vname), NUM2INT(vtype)) ? Qtrue : Qfalse;
 }
 
@@ -268,15 +276,18 @@ static VALUE cTable_find(VALUE vself){
 
 void init_table(){
   rb_define_method(cTable, "mput", cTable_mput, 1);
+  rb_define_alias(cTable, "lput", "mput");                    // Rufus Compat
   rb_define_method(cTable, "put", cTable_put, 2);
   rb_define_alias(cTable, "[]=", "put");
   rb_define_method(cTable, "putkeep", cTable_putkeep, 2);
   rb_define_method(cTable, "putcat", cTable_putcat, 2);
   rb_define_method(cTable, "out", cTable_out, 1);
+  rb_define_alias(cTable, "delete", "out");                   // Rufus Compat
   rb_define_method(cTable, "get", cTable_get, 1);
   rb_define_method(cTable, "mget", cTable_mget, -1);
+  rb_define_alias(cTable, "lget", "mget");                    // Rufus Compat
   rb_define_alias(cTable, "[]", "get");
-  rb_define_method(cTable, "setindex", cTable_setindex, 2);
+  rb_define_method(cTable, "set_index", cTable_setindex, 2);  // Rufus Compat
   rb_define_method(cTable, "genuid", cTable_genuid, 0);
   rb_define_alias(cTable, "generate_unique_id", "genuid");
   rb_define_method(cTable, "fetch", cTable_fetch, -1);

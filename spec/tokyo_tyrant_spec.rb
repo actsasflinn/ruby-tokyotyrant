@@ -131,7 +131,7 @@ describe TokyoTyrant::DB, "with an open database" do
 
   it "should report db size" do
     @db['rootbeer'] = 'virgils'
-    @db.size.should == 528736
+    @db.db_size.should == 528736
   end
 
   it "should fetch a record" do
