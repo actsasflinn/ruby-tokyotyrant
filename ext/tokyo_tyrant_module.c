@@ -166,22 +166,6 @@ static VALUE mTokyoTyrant_get_double(VALUE vself, VALUE vkey){
   return mTokyoTyrant_add_double(vself, vkey, INT2NUM(0));
 }
 
-// TODO: Give this more attention, it's untested and needs defaults for scan_args
-static VALUE mTokyoTyrant_ext(int argc, VALUE *argv, VALUE vself){
-  const char *res;
-  VALUE vname, vkey, vvalue, vopts;
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
-
-  rb_scan_args(argc, argv, "14", &vname, &vkey, &vvalue, &vopts);
-
-  vname = StringValueEx(vname);
-  vkey = StringValueEx(vkey);
-  vvalue = StringValueEx(vvalue);
-  res = tcrdbext2(db, RSTRING_PTR(vname), FIXNUM_P(vopts), RSTRING_PTR(vkey), RSTRING_PTR(vvalue));
-  return rb_str_new2(res);
-}
-
 static VALUE mTokyoTyrant_sync(VALUE vself){
   TCRDB *db;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
@@ -312,7 +296,6 @@ void init_mod(){
   rb_define_method(mTokyoTyrant, "get_int", mTokyoTyrant_get_int, 1);
   rb_define_method(mTokyoTyrant, "add_double", mTokyoTyrant_add_double, 2);
   rb_define_method(mTokyoTyrant, "get_double", mTokyoTyrant_get_double, 1);
-  rb_define_method(mTokyoTyrant, "ext", mTokyoTyrant_ext, -1);
   rb_define_method(mTokyoTyrant, "sync", mTokyoTyrant_sync, 0);
   rb_define_method(mTokyoTyrant, "vanish", mTokyoTyrant_vanish, 0);
   rb_define_alias(mTokyoTyrant, "clear", "vanish");
