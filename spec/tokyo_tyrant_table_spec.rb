@@ -105,6 +105,17 @@ describe TokyoTyrant::Table, "with an open database" do
     @db.fwmkeys('apples').sort.should == ["apples/grannysmith", "apples/royalgala"]
   end
 
+  it "should delete forward matching keys" do
+    @db['apples/royalgala'] = { :code => '4173', :color => 'red-yellow' }
+    @db['apples/grannysmith'] = { :code => '4139', :color => 'green' }
+    @db['bananas/yellow'] = { :code => '4011', :color => 'yellow' }
+    @db['oranges/shamouti'] = { :code => '3027', :color => 'orange' }
+    @db['grapefruit/deepred'] = { :code => '4288', :color => 'yellow/pink' }
+    @db.delete_keys_with_prefix('apples').should == nil
+    @db.fwmkeys('apples').should.be.empty
+    @db.keys.sort.should == ['bananas/yellow', 'grapefruit/deepred', 'oranges/shamouti']
+  end
+
   it "should get all keys" do
     keys = %w[appetizers entree dessert]
     values = [{ :cheap => 'chips', :expensive => 'sample everything platter' },

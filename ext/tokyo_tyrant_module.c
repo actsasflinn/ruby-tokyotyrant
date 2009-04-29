@@ -144,6 +144,22 @@ static VALUE mTokyoTyrant_fwmkeys(int argc, VALUE *argv, VALUE vself){
   return vary;
 }
 
+static VALUE mTokyoTyrant_delete_keys_with_prefix(int argc, VALUE *argv, VALUE vself){
+  VALUE vprefix, vmax;
+  TCLIST *keys;
+  int max;
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  rb_scan_args(argc, argv, "11", &vprefix, &vmax);
+
+  vprefix = StringValueEx(vprefix);
+  max = (vmax == Qnil) ? -1 : NUM2INT(vmax);
+  keys = tcrdbfwmkeys(db, RSTRING_PTR(vprefix), RSTRING_LEN(vprefix), max);
+  tcrdbmisc(db, "outlist", 0, keys);
+  tclistdel(keys);
+  return Qnil;
+}
+
 static VALUE mTokyoTyrant_keys(VALUE vself){
   /*
   VALUE vary;
@@ -328,6 +344,8 @@ void init_mod(){
   rb_define_method(mTokyoTyrant, "iterinit", mTokyoTyrant_iterinit, 0);
   rb_define_method(mTokyoTyrant, "iternext", mTokyoTyrant_iternext, 0);
   rb_define_method(mTokyoTyrant, "fwmkeys", mTokyoTyrant_fwmkeys, -1);
+  rb_define_method(mTokyoTyrant, "delete_keys_with_prefix", mTokyoTyrant_delete_keys_with_prefix, -1);// Rufus Compat
+  rb_define_alias(mTokyoTyrant, "dfwmkeys", "delete_keys_with_prefix");  
   rb_define_method(mTokyoTyrant, "keys", mTokyoTyrant_keys, 0);
   rb_define_method(mTokyoTyrant, "add_int", mTokyoTyrant_add_int, 2);
   rb_define_method(mTokyoTyrant, "get_int", mTokyoTyrant_get_int, 1);

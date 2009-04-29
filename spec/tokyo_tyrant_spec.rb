@@ -107,6 +107,17 @@ describe TokyoTyrant::DB, "with an open database" do
     @db.fwmkeys('apples').sort.should == ["apples/grannysmith", "apples/royalgala"]
   end
 
+  it "should delete forward matching keys" do
+    @db['apples/royalgala'] = '4173'
+    @db['apples/grannysmith'] = '4139'
+    @db['bananas/yellow'] = '4011'
+    @db['oranges/shamouti'] = '3027'
+    @db['grapefruit/deepred'] = '4288'
+    @db.delete_keys_with_prefix('apples').should == nil
+    @db.fwmkeys('apples').should.be.empty
+    @db.keys.sort.should == ['bananas/yellow', 'grapefruit/deepred', 'oranges/shamouti']
+  end
+
   it "should get all keys" do
     keys = %w[appetizers entree dessert]
     values = %w[chips chicken\ caeser\ salad ice\ cream]
