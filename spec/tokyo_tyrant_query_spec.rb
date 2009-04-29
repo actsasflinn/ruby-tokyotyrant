@@ -93,4 +93,15 @@ describe TokyoTyrant::Query, "with an open database" do
     res = @db.prepare_query{ |q| q.condition(:type, :streq, 'Cucumber') }.count
     res.should == 5
   end
+
+  it "should allow a custom pkey for a result set" do
+    q = @db.query
+    q.condition(:type, :streq, 'Cucumber')
+    q.set_pkey(:pk)
+    q.get.should == [{:type=>"Cucumber", :code=>"4592", :pk=>"4592", :variety=>"Armenian"},
+                     {:type=>"Cucumber", :code=>"4593", :pk=>"4593", :variety=>"English / Hot House / Long Seedless / Telegraph / Continental"},
+                     {:type=>"Cucumber", :code=>"4594", :pk=>"4594", :variety=>"Japanese / White"},
+                     {:type=>"Cucumber", :code=>"4595", :pk=>"4595", :variety=>"Lemon"},
+                     {:type=>"Cucumber", :code=>"4596", :pk=>"4596", :variety=>"Pickling / Gherkin"}]
+  end
 end

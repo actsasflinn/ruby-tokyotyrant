@@ -92,8 +92,8 @@ static VALUE cQuery_searchcount(VALUE vself){
 
 static VALUE cQuery_get(VALUE vself){
   int i, num, ksiz;
-  const char *name, *col;
-  VALUE vqry, vary, vcols;
+  const char *name, *col, *pkey;
+  VALUE vqry, vary, vcols, vpkey;
   RDBQRY *qry;
   TCLIST *res;
   TCMAP *cols;
@@ -103,6 +103,8 @@ static VALUE cQuery_get(VALUE vself){
   res = tcrdbqrysearchget(qry);
   num = tclistnum(res);
   vary = rb_ary_new2(num);
+  vpkey = rb_iv_get(vself, "@pkey");
+  pkey = vpkey == Qnil ? "__id" : STR2CSTR(StringValueEx(vpkey));
   for(i = 0; i < num; i++){
     vcols = rb_hash_new();
     cols = tcrdbqryrescols(res, i);
@@ -110,7 +112,7 @@ static VALUE cQuery_get(VALUE vself){
       tcmapiterinit(cols);
       while((name = tcmapiternext(cols, &ksiz)) != NULL){
         col = tcmapget2(cols, name);
-        if (ksiz == 0) name = "__id";
+        if (ksiz == 0) name = pkey;
         rb_hash_aset(vcols, ID2SYM(rb_intern(name)), rb_str_new2(col));
       }
     }
@@ -119,6 +121,10 @@ static VALUE cQuery_get(VALUE vself){
   }
   tclistdel(res);
   return vary;
+}
+
+static VALUE cQuery_set_pkey(VALUE vself, VALUE vpkey) {
+  return rb_iv_set(vself, "@pkey", vpkey);
 }
 
 void init_query(){
@@ -160,4 +166,6 @@ void init_query(){
   rb_define_method(cQuery, "searchcount", cQuery_searchcount, 0);
   rb_define_alias(cQuery, "count", "searchcount");              // Rufus Compat
   rb_define_method(cQuery, "get", cQuery_get, 0);
+  rb_define_method(cQuery, "set_pkey", cQuery_set_pkey, 1);
+  rb_define_alias(cQuery, "pkey=", "set_pkey");
 }
