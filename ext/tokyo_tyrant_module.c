@@ -67,6 +67,39 @@ static VALUE mTokyoTyrant_out(VALUE vself, VALUE vkey){
   return tcrdbout2(db, RSTRING_PTR(vkey)) ? Qtrue : Qfalse;
 }
 
+// TODO: merge out and mout?
+static VALUE mTokyoTyrant_outlist(int argc, VALUE *argv, VALUE vself){
+  VALUE vkeys, vary, vvalue;
+  TCRDB *db;
+  TCLIST *list, *result;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  rb_scan_args(argc, argv, "*", &vkeys);
+
+  // I really hope there is a better way to do this
+  if (RARRAY_LEN(vkeys) == 1) {
+    vvalue = rb_ary_entry(vkeys, 0);
+    switch (TYPE(vvalue)){
+      case T_STRING:
+      case T_FIXNUM:
+        break;
+      case T_ARRAY:
+        vkeys = vvalue;
+        break;
+      case T_OBJECT:
+        vkeys = rb_convert_type(vvalue, T_ARRAY, "Array", "to_a");
+        break;
+    }
+  }
+  Check_Type(vkeys, T_ARRAY);
+
+  list = varytolist(vkeys);
+  result = tcrdbmisc(db, "outlist", 0, list);
+  tclistdel(list);
+  vary = listtovary(result);
+  tclistdel(result);
+  return vary;
+}
+
 static VALUE mTokyoTyrant_check(VALUE vself, VALUE vkey){
   TCRDB *db;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
@@ -284,6 +317,9 @@ void init_mod(){
   rb_define_method(mTokyoTyrant, "ecode", mTokyoTyrant_ecode, 0);
   rb_define_method(mTokyoTyrant, "out", mTokyoTyrant_out, 1);
   rb_define_alias(mTokyoTyrant, "delete", "out");                 // Rufus Compat
+  rb_define_method(mTokyoTyrant, "outlist", mTokyoTyrant_outlist, -1);
+  rb_define_alias(mTokyoTyrant, "mdelete", "outlist");
+  rb_define_alias(mTokyoTyrant, "ldelete", "outlist");            // Rufus Compat
   rb_define_method(mTokyoTyrant, "check", mTokyoTyrant_check, 1);
   rb_define_alias(mTokyoTyrant, "has_key?", "check");
   rb_define_alias(mTokyoTyrant, "key?", "check");

@@ -45,6 +45,17 @@ describe TokyoTyrant::Table, "with an open database" do
     end
   end
 
+  it "should delete multiple values" do
+    h = { 'pizza' => { :best => 'old forge style', :ok => 'new york style', :worst => 'chicago style' },
+          'sandwich' => { :best => 'peanut butter jelly', :ok => 'turkey', :worst => 'olive loaf' },
+          'yogurt' => { :best => 'greek', :ok => 'organic', :worst => '+hfcs' },
+          'coffee' => { :best => 'black', :ok => 'espresso', :worst => 'latte' } }
+
+    @db.mput(h)
+    @db.outlist('coffee', 'yogurt').should.be.empty
+    @db.keys.sort.should == ['pizza','sandwich']
+  end
+
   it "should get multiple values" do
     h = { 'pizza' => { :best => 'old forge style', :ok => 'new york style', :worst => 'chicago style' },
           'sandwich' => { :best => 'peanut butter jelly', :ok => 'turkey', :worst => 'olive loaf' },
