@@ -1,5 +1,28 @@
 #include <tokyo_tyrant.h>
 
+extern VALUE unpackTokyoValue(char *buf, int bsiz){
+  VALUE vval;
+  long int tmpInt;
+  double tmpDbl;
+
+  switch(bsiz){
+    case SIZEOF_LONG:
+      tmpInt = 0;
+      memcpy(&tmpInt, buf, sizeof(uint32_t));
+      vval = rb_ll2inum(tmpInt);
+      break;
+    case SIZEOF_DOUBLE:
+      tmpDbl = 0.0;
+      memcpy(&tmpDbl, buf, sizeof(double));
+      vval = rb_float_new(tmpDbl);
+      break;
+    default:
+      vval = rb_str_new2(buf);
+      break;
+  }
+  return vval;
+}
+
 extern VALUE StringValueEx(VALUE vobj){
   char kbuf[NUMBUFSIZ];
   int ksiz;

@@ -83,14 +83,25 @@ static VALUE cDB_putshl(VALUE vself, VALUE vkey, VALUE vstr, VALUE vwidth){
 
 static VALUE cDB_get(VALUE vself, VALUE vkey){
   VALUE vval;
-  char *vbuf;
+  char *buf;
+  int bsiz, ecode;
   TCRDB *db;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
 
+  // this is ugly
   vkey = StringValueEx(vkey);
-  if(!(vbuf = tcrdbget2(db, RSTRING_PTR(vkey)))) return Qnil;
-  vval = rb_str_new2(vbuf);
-  tcfree(vbuf);
+  if(!(buf = tcrdbget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), &bsiz))){
+    if ((ecode = tcrdbecode(db))) {
+      if (ecode != TTENOREC) {
+        rb_raise(eTokyoTyrantError, "get error: %s", tcrdberrmsg(ecode));
+      }
+    }
+    return Qnil;
+  } else {
+    vval = unpackTokyoValue(buf, bsiz);
+  }
+
+  tcfree(buf);
   return vval;
 }
 
