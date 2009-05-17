@@ -5,7 +5,7 @@ extern VALUE unpackTokyoValue(char *buf, int bsiz){
   long tmpInt;
   double tmpDbl;
 
-  if (iscntrl(buf[1])) {
+  if (buf[1] == '\x00') {
     switch(bsiz){
       case SIZEOF_LONG:
         tmpInt = 0;
