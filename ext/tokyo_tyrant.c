@@ -1,11 +1,17 @@
 #include <tokyo_tyrant.h>
 
-extern VALUE unpackTokyoValue(char *buf, int bsiz){
+extern VALUE unpackTokyoValue(char *buf, int bsiz, bool raw){
   VALUE vval;
   long tmpInt;
   double tmpDbl;
+  int i, is_binary;
+  is_binary = 0;
 
-  if (buf[1] == '\x00') {
+  for(i = 0;i<bsiz;i++) {
+    is_binary += (buf[i] == '\x00' ? 1 : 0);
+  }
+
+  if (is_binary > 0 && !raw) {
     switch(bsiz){
       case SIZEOF_LONG:
         tmpInt = 0;
@@ -22,7 +28,7 @@ extern VALUE unpackTokyoValue(char *buf, int bsiz){
         break;
     }
   } else {
-    vval = rb_str_new2(buf);
+    vval = rb_str_buf_new2(buf);
   }
   return vval;
 }

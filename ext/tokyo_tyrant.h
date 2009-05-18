@@ -36,7 +36,7 @@ extern VALUE cDB;
 extern VALUE cTable;
 extern VALUE cQuery;
 
-extern VALUE unpackTokyoValue(char *buf, int bsiz);
+extern VALUE unpackTokyoValue(char *buf, int bsiz, bool raw);
 extern VALUE StringValueEx(VALUE vobj);
 extern TCLIST *varytolist(VALUE vary);
 extern VALUE listtovary(TCLIST *list);
