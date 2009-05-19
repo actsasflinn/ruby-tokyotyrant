@@ -82,7 +82,6 @@ static VALUE cDB_putshl(VALUE vself, VALUE vkey, VALUE vstr, VALUE vwidth){
 }
 
 static VALUE cDB_get(int argc, VALUE *argv, VALUE vself){
-//VALUE vself, VALUE vkey){
   VALUE vkey, vraw, vval;
   char *buf;
   int bsiz, ecode;
@@ -90,7 +89,7 @@ static VALUE cDB_get(int argc, VALUE *argv, VALUE vself){
   TCRDB *db;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
 
-  rb_scan_args(argc, argv, "12", &vkey, &vraw);
+  rb_scan_args(argc, argv, "11", &vkey, &vraw);
   raw = (vraw == Qtrue);
 
   // this is ugly

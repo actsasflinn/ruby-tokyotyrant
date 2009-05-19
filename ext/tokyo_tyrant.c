@@ -28,10 +28,20 @@ extern VALUE unpackTokyoValue(char *buf, int bsiz, bool raw){
         break;
     }
   } else {
-    vval = rb_str_buf_new2(buf);
+    vval = rb_str_buf_new2("");
+    char s[5];
+
+    for(i=0;i<bsiz;i++){
+      char c = *buf++;
+      s[0] = c;
+      rb_str_buf_cat(vval, s, 1);
+    }
+//    buf -= bsiz;
+//    rb_str_buf_cat2(vval, "");
   }
   return vval;
 }
+
 extern VALUE StringValueEx(VALUE vobj){
   char kbuf[NUMBUFSIZ];
   int ksiz;
