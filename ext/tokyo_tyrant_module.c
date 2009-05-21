@@ -237,19 +237,27 @@ static VALUE mTokyoTyrant_copy(VALUE vself, VALUE path){
   return tcrdbcopy(db, RSTRING_PTR(path)) ? Qtrue : Qfalse;
 }
 
-static VALUE mTokyoTyrant_restore(VALUE vself, VALUE path, uint64_t ts){
+static VALUE mTokyoTyrant_restore(VALUE vself, VALUE vpath, VALUE vts, VALUE vopts){
+  uint64_t ts;
+  int opts;
   TCRDB *db;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
 
-  Check_Type(path, T_STRING);
-  return tcrdbrestore(db, RSTRING_PTR(path), ts) ? Qtrue : Qfalse;
+  Check_Type(vpath, T_STRING);
+  ts = (uint64_t) FIX2INT(vts);
+  opts = FIX2INT(vopts);
+  return tcrdbrestore(db, RSTRING_PTR(vpath), ts, opts) ? Qtrue : Qfalse;
 }
 
-static VALUE mTokyoTyrant_setmst(VALUE vself, VALUE host, VALUE port){
+static VALUE mTokyoTyrant_setmst(VALUE vself, VALUE vhost, VALUE vport, VALUE vts, VALUE vopts){
+  uint64_t ts;
+  int opts;
   TCRDB *db;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
 
-  return tcrdbsetmst(db, StringValuePtr(host), FIX2INT(port)) ? Qtrue : Qfalse;
+  ts = (uint64_t) FIX2INT(vts);
+  opts = FIX2INT(vopts);
+  return tcrdbsetmst(db, RSTRING_PTR(vhost), FIX2INT(vport), ts, opts) ? Qtrue : Qfalse;
 }
 
 static VALUE mTokyoTyrant_rnum(VALUE vself){
