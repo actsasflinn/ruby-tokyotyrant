@@ -107,7 +107,7 @@ static VALUE cTable_get(VALUE vself, VALUE vkey){
 }
 
 static VALUE cTable_mget(int argc, VALUE *argv, VALUE vself){
-  const char *kbuf, *vbuf;
+  const char *kbuf;
   int ksiz, vsiz;
   VALUE vkeys, vhash, vcols, vvalue;
   TCRDB *db;
@@ -137,11 +137,11 @@ static VALUE cTable_mget(int argc, VALUE *argv, VALUE vself){
   vhash = rb_hash_new();
   tcmapiterinit(recs);
   while((kbuf = tcmapiternext(recs, &ksiz)) != NULL){
-    vbuf = tcmapiterval(kbuf, &vsiz);
+    const char *vbuf = tcmapiterval(kbuf, &vsiz);
     cols = tcstrsplit4(vbuf, vsiz);
     vcols = maptovhashsym(cols);
     tcmapdel(cols);
-    rb_hash_aset(vhash, rb_str_new(kbuf, ksiz), vcols);
+    rb_hash_aset(vhash, StringRaw(kbuf, ksiz), vcols);
   }
   tcmapdel(recs);
   return vhash;

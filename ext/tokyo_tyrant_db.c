@@ -102,7 +102,7 @@ static VALUE cDB_get(int argc, VALUE *argv, VALUE vself){
     }
     return Qnil;
   } else {
-    vval = unpackTokyoValue(buf, bsiz, raw);
+    vval = StringRaw(buf, bsiz);
   }
 
   tcfree(buf);

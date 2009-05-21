@@ -1,44 +1,18 @@
 #include <tokyo_tyrant.h>
 
-extern VALUE unpackTokyoValue(char *buf, int bsiz, bool raw){
+extern VALUE StringRaw(const char *buf, int bsiz){
   VALUE vval;
-  long tmpInt;
-  double tmpDbl;
-  int i, is_binary;
-  is_binary = 0;
+  int i;
+  vval = rb_str_buf_new2("");
+  char s[5];
 
-  for(i = 0;i<bsiz;i++) {
-    is_binary += (buf[i] == '\x00' ? 1 : 0);
+  for(i=0;i<bsiz;i++){
+    char c = *buf++;
+    s[0] = c;
+    rb_str_buf_cat(vval, s, 1);
   }
-
-  if (is_binary > 0 && !raw) {
-    switch(bsiz){
-      case SIZEOF_LONG:
-        tmpInt = 0;
-        memcpy(&tmpInt, buf, sizeof(uint32_t));
-        vval = rb_ll2inum(tmpInt);
-        break;
-      case SIZEOF_DOUBLE:
-        tmpDbl = 0.0;
-        memcpy(&tmpDbl, buf, sizeof(double));
-        vval = rb_float_new(tmpDbl);
-        break;
-      default:
-        vval = rb_str_new2(buf);
-        break;
-    }
-  } else {
-    vval = rb_str_buf_new2("");
-    char s[5];
-
-    for(i=0;i<bsiz;i++){
-      char c = *buf++;
-      s[0] = c;
-      rb_str_buf_cat(vval, s, 1);
-    }
 //    buf -= bsiz;
 //    rb_str_buf_cat2(vval, "");
-  }
   return vval;
 }
 
@@ -117,27 +91,27 @@ extern TCMAP *vhashtomap(VALUE vhash){
 }
 
 extern VALUE maptovhash(TCMAP *map){
-  const char *kbuf, *vbuf;
+  const char *kbuf;
   int ksiz, vsiz;
   VALUE vhash;
   vhash = rb_hash_new();
   tcmapiterinit(map);
   while((kbuf = tcmapiternext(map, &ksiz)) != NULL){
-    vbuf = tcmapiterval(kbuf, &vsiz);
-    rb_hash_aset(vhash, rb_str_new(kbuf, ksiz), rb_str_new(vbuf, vsiz));
+    const char *vbuf = tcmapiterval(kbuf, &vsiz);
+    rb_hash_aset(vhash, rb_str_new(kbuf, ksiz), StringRaw(vbuf, vsiz));
   }
   return vhash;
 }
 
 extern VALUE maptovhashsym(TCMAP *map){
-  const char *kbuf, *vbuf;
+  const char *kbuf;
   int ksiz, vsiz;
   VALUE vhash;
   vhash = rb_hash_new();
   tcmapiterinit(map);
   while((kbuf = tcmapiternext(map, &ksiz)) != NULL){
-    vbuf = tcmapiterval(kbuf, &vsiz);
-    rb_hash_aset(vhash, ID2SYM(rb_intern(kbuf)), rb_str_new(vbuf, vsiz));
+    const char *vbuf = tcmapiterval(kbuf, &vsiz);
+    rb_hash_aset(vhash, ID2SYM(rb_intern(kbuf)), StringRaw(vbuf, vsiz));
   }
   return vhash;
 }
