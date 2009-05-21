@@ -158,7 +158,7 @@ static VALUE cDB_fetch(int argc, VALUE *argv, VALUE vself){
   vkey = StringValueEx(vkey);
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
   if((vbuf = tcrdbget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), &vsiz)) != NULL){
-    vval = rb_str_new(vbuf, vsiz);
+    vval = StringRaw(vbuf, vsiz);
     tcfree(vbuf);
   } else {
     vval = vdef;
@@ -169,16 +169,18 @@ static VALUE cDB_fetch(int argc, VALUE *argv, VALUE vself){
 static VALUE cDB_each(VALUE vself){
   VALUE vrv;
   TCRDB *db;
-  char *kxstr, *vxstr;
   if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
   vrv = Qnil;
   tcrdbiterinit(db);
-  while((kxstr = tcrdbiternext2(db)) != NULL){
-    vxstr = tcrdbget2(db, kxstr);
-    vrv = rb_yield_values(2, rb_str_new2(kxstr), rb_str_new2(vxstr));
-    tcfree(vxstr);
-    tcfree(kxstr);
+  int ksiz;
+  char *kbuf;
+  while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
+    int vsiz;
+    char *vbuf = tcrdbget(db, kbuf, ksiz, &vsiz);
+    vrv = rb_yield_values(2, rb_str_new2(kbuf), StringRaw(vbuf, vsiz));
+    tcfree(vbuf);
+    tcfree(kbuf);
   }
   return vrv;
 }
@@ -186,16 +188,18 @@ static VALUE cDB_each(VALUE vself){
 static VALUE cDB_each_value(VALUE vself){
   VALUE vrv;
   TCRDB *db;
-  char *kxstr, *vxstr;
   if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
   vrv = Qnil;
   tcrdbiterinit(db);
-  while((kxstr = tcrdbiternext2(db)) != NULL){
-    vxstr = tcrdbget2(db, kxstr);
-    vrv = rb_yield_values(1, rb_str_new2(vxstr));
-    tcfree(vxstr);
-    tcfree(kxstr);
+  int ksiz;
+  char *kbuf;
+  while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
+    int vsiz;
+    char *vbuf = tcrdbget(db, kbuf, ksiz, &vsiz);
+    vrv = rb_yield_values(1, StringRaw(vbuf, vsiz));
+    tcfree(vbuf);
+    tcfree(kbuf);
   }
   return vrv;
 }
@@ -203,15 +207,17 @@ static VALUE cDB_each_value(VALUE vself){
 static VALUE cDB_values(VALUE vself){
   VALUE vary;
   TCRDB *db;
-  char *kxstr, *vxstr;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
   vary = rb_ary_new2(tcrdbrnum(db));
   tcrdbiterinit(db);
-  while((kxstr = tcrdbiternext2(db)) != NULL){
-    vxstr = tcrdbget2(db, kxstr);
-    rb_ary_push(vary, rb_str_new2(vxstr));
-    tcfree(vxstr);
-    tcfree(kxstr);
+  int ksiz;
+  char *kbuf;
+  while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
+    int vsiz;
+    char *vbuf = tcrdbget(db, kbuf, ksiz, &vsiz);
+    rb_ary_push(vary, StringRaw(vbuf, vsiz));
+    tcfree(vbuf);
+    tcfree(kbuf);
   }
   return vary;
 }
