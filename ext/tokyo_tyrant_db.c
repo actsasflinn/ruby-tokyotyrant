@@ -81,16 +81,12 @@ static VALUE cDB_putshl(VALUE vself, VALUE vkey, VALUE vstr, VALUE vwidth){
   return Qtrue;
 }
 
-static VALUE cDB_get(int argc, VALUE *argv, VALUE vself){
-  VALUE vkey, vraw, vval;
+static VALUE cDB_get(VALUE vself, VALUE vkey){
+  VALUE vval;
   char *buf;
   int bsiz, ecode;
-  bool raw;
   TCRDB *db;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
-
-  rb_scan_args(argc, argv, "11", &vkey, &vraw);
-  raw = (vraw == Qtrue);
 
   // this is ugly
   vkey = StringValueEx(vkey);
@@ -231,7 +227,7 @@ void init_db(){
   rb_define_method(cDB, "putcat", cDB_putcat, 2);
   rb_define_method(cDB, "putshl", cDB_putshl, 2);
   rb_define_method(cDB, "putnr", cDB_putnr, 2);
-  rb_define_method(cDB, "get", cDB_get, -1);
+  rb_define_method(cDB, "get", cDB_get, 1);
   rb_define_alias(cDB, "[]", "get");
   rb_define_method(cDB, "mget", cDB_mget, -1);
   rb_define_alias(cDB, "lget", "mget");       // Rufus Compat
