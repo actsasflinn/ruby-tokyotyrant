@@ -95,13 +95,23 @@ static VALUE cTable_out(VALUE vself, VALUE vkey){
 
 static VALUE cTable_get(VALUE vself, VALUE vkey){
   VALUE vcols;
+  int ecode;
   TCRDB *db;
   TCMAP *cols;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
-  vkey = StringValueEx(vkey);
 
-  if(!(cols = tcrdbtblget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey)))) return Qnil;
-  vcols = maptovhashsym(cols);
+  vkey = StringValueEx(vkey);
+  if(!(cols = tcrdbtblget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey)))){
+    if ((ecode = tcrdbecode(db))) {
+      if (ecode != TTENOREC) {
+        rb_raise(eTokyoTyrantError, "get error: %s", tcrdberrmsg(ecode));
+      }
+    }
+    return Qnil;
+  } else {
+    vcols = maptovhashsym(cols);
+  }
+
   tcmapdel(cols);
   return vcols;
 }
