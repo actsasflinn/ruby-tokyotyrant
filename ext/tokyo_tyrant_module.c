@@ -17,23 +17,28 @@ static VALUE mTokyoTyrant_close(VALUE vself){
 }
 
 static VALUE mTokyoTyrant_initialize(int argc, VALUE *argv, VALUE vself){
-  VALUE host, port;
+  VALUE host, port, timeout, retry;
   int ecode;
   TCRDB *db;
 
-  rb_scan_args(argc, argv, "02", &host, &port);
+  rb_scan_args(argc, argv, "04", &host, &port, &timeout, &retry);
   if(NIL_P(host)) host = rb_str_new2("127.0.0.1");
   if(NIL_P(port)) port = INT2FIX(1978);
+  if(NIL_P(timeout)) timeout = rb_float_new(0.0);
+  if(NIL_P(retry)) retry = Qfalse;
 
   db = tcrdbnew();
 
-  if(!tcrdbopen(db, StringValuePtr(host), FIX2INT(port))){
+  if((!tcrdbtune(db, timeout, retry == Qtrue ? RDBTRECON : 0)) ||
+     (!tcrdbopen(db, RSTRING_PTR(host), FIX2INT(port)))){
     ecode = tcrdbecode(db);
     rb_raise(eTokyoTyrantError, "open error: %s", tcrdberrmsg(ecode));
   }
 
   rb_iv_set(vself, "@host", host);
   rb_iv_set(vself, "@port", port);
+  rb_iv_set(vself, "@timeout", timeout);
+  rb_iv_set(vself, "@retry", retry);
   rb_iv_set(vself, RDBVNDATA, Data_Wrap_Struct(rb_cObject, 0, mTokyoTyrant_free, db));
 
   return Qtrue;
