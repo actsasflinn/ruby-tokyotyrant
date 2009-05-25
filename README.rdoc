@@ -4,7 +4,7 @@ This is a c extension for Ruby to access TokyoTyrant databases.  It currently su
 
 == Install
 
-  # install tokyocabint and tokyotyrant
+  # install tokyocabinet and tokyotyrant (requires 1.1.27)
   # after installing tc and tt on linux I had to /sbin/ldconfig (as root)
   gem sources -a http://gems.github.com
   sudo gem install actsasflinn-ruby-tokyotyrant
