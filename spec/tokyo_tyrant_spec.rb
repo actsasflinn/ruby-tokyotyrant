@@ -21,6 +21,10 @@ describe TokyoTyrant::DB, "with an open database" do
     end
   end
 
+  it "should return a server expression" do
+    @db.server.should == '127.0.0.1:45000'
+  end
+
   it "should save a value" do
     @db[:salad] = 'bacon bits'
     @db[:salad].should == 'bacon bits'

@@ -4,6 +4,10 @@ static void mTokyoTyrant_free(TCRDB *db){
   tcrdbdel(db);
 }
 
+static VALUE mTokyoTyrant_server(VALUE vself){
+  return rb_iv_get(vself, "@server");;
+}
+
 static VALUE mTokyoTyrant_close(VALUE vself){
   int ecode;
   TCRDB *db;
@@ -17,7 +21,7 @@ static VALUE mTokyoTyrant_close(VALUE vself){
 }
 
 static VALUE mTokyoTyrant_initialize(int argc, VALUE *argv, VALUE vself){
-  VALUE host, port, timeout, retry;
+  VALUE host, port, timeout, retry, server;
   int ecode;
   TCRDB *db;
 
@@ -35,6 +39,8 @@ static VALUE mTokyoTyrant_initialize(int argc, VALUE *argv, VALUE vself){
     rb_raise(eTokyoTyrantError, "open error: %s", tcrdberrmsg(ecode));
   }
 
+  server = rb_str_new2(tcrdbexpr(db));
+  rb_iv_set(vself, "@server", server);
   rb_iv_set(vself, "@host", host);
   rb_iv_set(vself, "@port", port);
   rb_iv_set(vself, "@timeout", timeout);
@@ -341,6 +347,7 @@ void init_mod(){
   rb_define_const(mTokyoTyrant, "ITKEEP", INT2NUM(RDBITKEEP));
 
   rb_define_private_method(mTokyoTyrant, "initialize", mTokyoTyrant_initialize, -1);
+  rb_define_method(mTokyoTyrant, "server", mTokyoTyrant_server, 0);
   rb_define_method(mTokyoTyrant, "close", mTokyoTyrant_close, 0);
   rb_define_method(mTokyoTyrant, "errmsg", mTokyoTyrant_errmsg, -1);
   rb_define_method(mTokyoTyrant, "ecode", mTokyoTyrant_ecode, 0);
