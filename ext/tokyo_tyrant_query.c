@@ -53,12 +53,15 @@ static VALUE cQuery_setorder(VALUE vself, VALUE vname, VALUE vtype){
   return vself;
 }
 
-static VALUE cQuery_setmax(VALUE vself, VALUE vmax){
-  VALUE vqry;
+static VALUE cQuery_setlimit(int argc, VALUE *argv, VALUE vself){
+  VALUE vqry, vmax, vskip;
   RDBQRY *qry;
   vqry = rb_iv_get(vself, RDBQRYVNDATA);
   Data_Get_Struct(vqry, RDBQRY, qry);
-  tcrdbqrysetmax(qry, NUM2INT(vmax));
+  rb_scan_args(argc, argv, "11", &vmax, &vskip);
+  if(NIL_P(vskip)) vskip = INT2FIX(0);
+
+  tcrdbqrysetlimit(qry, NUM2INT(vmax), NUM2INT(vskip));
   return vself;
 }
 
@@ -157,8 +160,9 @@ void init_query(){
   rb_define_alias(cQuery, "add", "addcond");                    // Rufus Compat
   rb_define_method(cQuery, "setorder", cQuery_setorder, 2);
   rb_define_alias(cQuery, "order_by", "setorder");              // Rufus Compat
-  rb_define_method(cQuery, "setmax", cQuery_setmax, 1);
-  rb_define_alias(cQuery, "limit", "setmax");                   // Rufus Compat
+  rb_define_method(cQuery, "setlimit", cQuery_setlimit, -1);
+  rb_define_alias(cQuery, "setmax", "setlimit");                 // Rufus Compat
+  rb_define_alias(cQuery, "limit", "setlimit");                 // Rufus Compat
   rb_define_method(cQuery, "search", cQuery_search, 0);
   rb_define_alias(cQuery, "run", "search");
   rb_define_method(cQuery, "searchout", cQuery_searchout, 0);

@@ -41,10 +41,19 @@ describe TokyoTyrant::Query, "with an open database" do
   end
 
   it "should get limited keys for search conditions with limit" do
-    q = @db.query
-    q.addcond('type', :streq, 'Apple')
-    q.setmax(10)
-    q.search.sort.should == ["3072", "3073", "3074", "3075", "3076", "3077", "3078", "3348", "3349", "4182"]
+    q = @db.query{ |q| 
+      q.addcond('type', :streq, 'Apple')
+      q.order_by('variety', :strdesc)
+      q.setlimit(10)
+    }.should == ["4860", "3011", "3271", "3382", "4182", "3353", "4176", "3272", "3297", "3009"]
+  end
+
+  it "should get limited keys for search conditions with limit and offset" do
+    q = @db.query{ |q| 
+      q.addcond('type', :streq, 'Apple')
+      q.order_by('variety', :strdesc)
+      q.setlimit(10, 10)
+    }.should == ["3008", "3352", "3077", "3349", "3076", "3073", "3348", "3007", "3078", "3347"]
   end
 
   it "should get records for search conditions" do
