@@ -34,22 +34,35 @@ static VALUE cQuery_addcond(VALUE vself, VALUE vname, VALUE vop, VALUE vexpr){
   return vself;
 }
 
-static VALUE cQuery_setorder(VALUE vself, VALUE vname, VALUE vtype){
+static VALUE cQuery_setorder(int argc, VALUE *argv, VALUE vself){
+  VALUE vname, vtype;
+  int type;
   VALUE vqry;
   RDBQRY *qry;
+
+  rb_scan_args(argc, argv, "11", &vname, &vtype);
+  if(NIL_P(vtype)) vtype = INT2NUM(RDBQOSTRASC);
+
   vname = StringValueEx(vname);
 
-  if (TYPE(vtype) == T_SYMBOL) vtype = rb_str_new2(rb_id2name(SYM2ID(vtype)));
-
-  if (TYPE(vtype) == T_STRING){
-    vtype = StringValueEx(vtype);
-    vtype = tctdbqrystrtoordertype(RSTRING_PTR(toupper(vtype)));
-    vtype = INT2NUM(vtype);
+  switch(TYPE(vtype)){
+    case T_SYMBOL:
+      vtype = rb_str_new2(rb_id2name(SYM2ID(vtype)));
+    case T_STRING:
+      vtype = StringValueEx(vtype);
+      type = tctdbqrystrtoordertype(RSTRING_PTR(toupper(vtype)));
+      break;
+    case T_FIXNUM:
+      type = NUM2INT(vtype);
+      break;
+    default:
+      rb_raise(rb_eArgError, "type must be symbol, string or integer");
+      break;
   }
 
   vqry = rb_iv_get(vself, RDBQRYVNDATA);
   Data_Get_Struct(vqry, RDBQRY, qry);
-  tcrdbqrysetorder(qry, RSTRING_PTR(vname), NUM2INT(vtype));
+  tcrdbqrysetorder(qry, RSTRING_PTR(vname), type);
   return vself;
 }
 
@@ -158,7 +171,7 @@ void init_query(){
   rb_define_alias(cQuery, "add_condition", "addcond");
   rb_define_alias(cQuery, "condition", "addcond");
   rb_define_alias(cQuery, "add", "addcond");                    // Rufus Compat
-  rb_define_method(cQuery, "setorder", cQuery_setorder, 2);
+  rb_define_method(cQuery, "setorder", cQuery_setorder, -1);
   rb_define_alias(cQuery, "order_by", "setorder");              // Rufus Compat
   rb_define_method(cQuery, "setlimit", cQuery_setlimit, -1);
   rb_define_alias(cQuery, "setmax", "setlimit");                 // Rufus Compat

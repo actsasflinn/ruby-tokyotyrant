@@ -26,6 +26,13 @@ describe TokyoTyrant::Query, "with an open database" do
     end
   end
 
+  it "should get ordered keys for search conditions with default order" do
+    q = @db.query
+    q.addcond(:type, :streq, 'Spinach')
+    q.setorder(:variety)
+    q.search.should == ["3332", "34173"]
+  end
+
   it "should get ordered keys for search conditions with ascending order" do
     q = @db.query
     q.addcond('type', :streq, 'Spinach')
