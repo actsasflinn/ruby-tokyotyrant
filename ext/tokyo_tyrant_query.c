@@ -50,7 +50,7 @@ static VALUE cQuery_setorder(int argc, VALUE *argv, VALUE vself){
       vtype = rb_str_new2(rb_id2name(SYM2ID(vtype)));
     case T_STRING:
       vtype = StringValueEx(vtype);
-      type = tctdbqrystrtoordertype(RSTRING_PTR(toupper(vtype)));
+      type = tctdbqrystrtoordertype(RSTRING_PTR(vtype));
       break;
     case T_FIXNUM:
       type = NUM2INT(vtype);

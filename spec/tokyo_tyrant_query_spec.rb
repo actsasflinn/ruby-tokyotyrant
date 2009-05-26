@@ -43,7 +43,7 @@ describe TokyoTyrant::Query, "with an open database" do
   it "should get ordered keys for search conditions with decending order" do
     q = @db.query
     q.addcond('type', :streq, 'Spinach')
-    q.order_by('variety', :strdesc)
+    q.order_by('variety', :StrDesc)
     q.search.should == ["34173", "3332"]
   end
 
