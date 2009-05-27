@@ -20,7 +20,7 @@ CLEAN.include('pkg', 'tmp')
 
 gemspec = Gem::Specification.new do |s|
   s.name = 'ruby-tokyotyrant'
-  s.version = '0.1.7'
+  s.version = '0.1.8'
   s.authors = [ 'Flinn' ]
   s.email = 'flinn@actsasflinn.com'
   s.homepage = 'http://github.com/actsasflinn/ruby-tokyotyrant/'
@@ -34,7 +34,7 @@ gemspec = Gem::Specification.new do |s|
   s.files = ['COPYING',
              'Rakefile',
              'README.rdoc'] +
-             Dir['ext/**/*'] +
+             Dir['ext/**/*.[rb|c|h]'] +
              Dir['spec/**/*'] +
              Dir['benchmarks/**/*']
   s.extensions << "ext/extconf.rb"
