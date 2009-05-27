@@ -165,7 +165,7 @@ static VALUE cTable_setindex(VALUE vself, VALUE vname, VALUE vtype){
 
   if (TYPE(vtype) == T_STRING){
     vtype = StringValueEx(vtype);
-    vtype = tctdbstrtoindextype(RSTRING_PTR(toupper(vtype)));
+    vtype = tctdbstrtoindextype(RSTRING_PTR(vtype));
     vtype = INT2NUM(vtype);
   }
 

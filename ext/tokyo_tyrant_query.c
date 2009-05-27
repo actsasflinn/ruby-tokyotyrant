@@ -24,7 +24,7 @@ static VALUE cQuery_addcond(VALUE vself, VALUE vname, VALUE vop, VALUE vexpr){
 
   if (TYPE(vop) == T_STRING){
     vop = StringValueEx(vop);
-    vop = tctdbqrystrtocondop(RSTRING_PTR(toupper(vop)));
+    vop = tctdbqrystrtocondop(RSTRING_PTR(vop));
     vop = INT2NUM(vop);
   }
 
