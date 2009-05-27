@@ -135,6 +135,7 @@ static VALUE cTable_mget(int argc, VALUE *argv, VALUE vself){
       case T_ARRAY:
         vkeys = vvalue;
         break;
+      case T_STRUCT: // range is not a T_STRUCT instead of a T_OBJECT in ruby1.9?
       case T_OBJECT:
         vkeys = rb_convert_type(vvalue, T_ARRAY, "Array", "to_a");
         break;
