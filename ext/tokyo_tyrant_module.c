@@ -233,6 +233,18 @@ static VALUE mTokyoTyrant_sync(VALUE vself){
   return tcrdbsync(db) ? Qtrue : Qfalse;
 }
 
+static VALUE mTokyoTyrant_optimize(int argc, VALUE *argv, VALUE vself){
+  VALUE vparams;
+  const char *params;
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  rb_scan_args(argc, argv, "01", &vparams);
+  if(NIL_P(vparams)) vparams = Qnil;
+  if(vparams != Qnil) params = RSTRING_PTR(vparams);
+
+  return tcrdboptimize(db, params) ? Qtrue : Qfalse;
+}
+
 static VALUE mTokyoTyrant_vanish(VALUE vself){
   TCRDB *db;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
@@ -372,6 +384,7 @@ void init_mod(){
   rb_define_method(mTokyoTyrant, "add_double", mTokyoTyrant_add_double, 2);
   rb_define_method(mTokyoTyrant, "get_double", mTokyoTyrant_get_double, 1);
   rb_define_method(mTokyoTyrant, "sync", mTokyoTyrant_sync, 0);
+  rb_define_method(mTokyoTyrant, "optimize", mTokyoTyrant_optimize, -1);
   rb_define_method(mTokyoTyrant, "vanish", mTokyoTyrant_vanish, 0);
   rb_define_alias(mTokyoTyrant, "clear", "vanish");
   rb_define_method(mTokyoTyrant, "copy", mTokyoTyrant_copy, 1);

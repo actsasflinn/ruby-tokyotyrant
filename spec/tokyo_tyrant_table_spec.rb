@@ -25,6 +25,10 @@ describe TokyoTyrant::Table, "with an open database" do
     @db.server.should == '127.0.0.1:45001'
   end
 
+  it "should optimize" do
+    @db.optimize.should.be.true
+  end
+
   it "should save a value" do
     value = { :lettuce => 'Red Leaf', :dressing => 'ranch', :extra => 'bacon bits' }
     @db[:salad] = value
