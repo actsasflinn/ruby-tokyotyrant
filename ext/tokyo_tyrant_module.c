@@ -198,32 +198,52 @@ static VALUE mTokyoTyrant_keys(VALUE vself){
   return vary;
 }
 
-static VALUE mTokyoTyrant_add_int(VALUE vself, VALUE vkey, VALUE vnum){
-  int num;
+static VALUE mTokyoTyrant_addint(VALUE vself, VALUE vkey, int inum){
   TCRDB *db;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
   vkey = StringValueEx(vkey);
 
-  num = tcrdbaddint(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), NUM2INT(vnum));
-  return num == INT_MIN ? Qnil : INT2NUM(num);
+  inum = tcrdbaddint(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), inum);
+  return inum == INT_MIN ? Qnil : INT2NUM(inum);
+}
+
+static VALUE mTokyoTyrant_add_int(int argc, VALUE *argv, VALUE vself){
+  VALUE vkey, vnum;
+  int inum = 1;
+
+  rb_scan_args(argc, argv, "11", &vkey, &vnum);
+  vkey = StringValueEx(vkey);
+  if(NIL_P(vnum)) vnum = INT2NUM(inum);
+
+  return mTokyoTyrant_addint(vself, vkey, NUM2INT(vnum));
 }
 
 static VALUE mTokyoTyrant_get_int(VALUE vself, VALUE vkey){
-  return mTokyoTyrant_add_int(vself, vkey, INT2NUM(0));
+  return mTokyoTyrant_addint(vself, vkey, 0);
 }
 
-static VALUE mTokyoTyrant_add_double(VALUE vself, VALUE vkey, VALUE vnum){
-  double num;
+static VALUE mTokyoTyrant_adddouble(VALUE vself, VALUE vkey, double dnum){
   TCRDB *db;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
 
   vkey = StringValueEx(vkey);
-  num = tcrdbadddouble(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), NUM2DBL(vnum));
-  return isnan(num) ? Qnil : rb_float_new(num);
+  dnum = tcrdbadddouble(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), dnum);
+  return isnan(dnum) ? Qnil : rb_float_new(dnum);
+}
+
+static VALUE mTokyoTyrant_add_double(int argc, VALUE *argv, VALUE vself){
+  VALUE vkey, vnum;
+  double dnum = 1.0;
+
+  rb_scan_args(argc, argv, "11", &vkey, &vnum);
+  vkey = StringValueEx(vkey);
+  if(NIL_P(vnum)) vnum = rb_float_new(dnum);
+
+  return mTokyoTyrant_adddouble(vself, vkey, NUM2DBL(vnum));
 }
 
 static VALUE mTokyoTyrant_get_double(VALUE vself, VALUE vkey){
-  return mTokyoTyrant_add_double(vself, vkey, INT2NUM(0));
+  return mTokyoTyrant_adddouble(vself, vkey, 0.0);
 }
 
 static VALUE mTokyoTyrant_sync(VALUE vself){
@@ -235,7 +255,7 @@ static VALUE mTokyoTyrant_sync(VALUE vself){
 
 static VALUE mTokyoTyrant_optimize(int argc, VALUE *argv, VALUE vself){
   VALUE vparams;
-  const char *params;
+  const char *params = NULL;
   TCRDB *db;
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
   rb_scan_args(argc, argv, "01", &vparams);
@@ -379,9 +399,12 @@ void init_mod(){
   rb_define_method(mTokyoTyrant, "delete_keys_with_prefix", mTokyoTyrant_delete_keys_with_prefix, -1);// Rufus Compat
   rb_define_alias(mTokyoTyrant, "dfwmkeys", "delete_keys_with_prefix");  
   rb_define_method(mTokyoTyrant, "keys", mTokyoTyrant_keys, 0);
-  rb_define_method(mTokyoTyrant, "add_int", mTokyoTyrant_add_int, 2);
+  rb_define_method(mTokyoTyrant, "add_int", mTokyoTyrant_add_int, -1);
+  rb_define_alias(mTokyoTyrant, "addint", "add_int");
+  rb_define_alias(mTokyoTyrant, "increment", "add_int");
   rb_define_method(mTokyoTyrant, "get_int", mTokyoTyrant_get_int, 1);
-  rb_define_method(mTokyoTyrant, "add_double", mTokyoTyrant_add_double, 2);
+  rb_define_method(mTokyoTyrant, "add_double", mTokyoTyrant_add_double, -1);
+  rb_define_alias(mTokyoTyrant, "adddouble", "adddouble");
   rb_define_method(mTokyoTyrant, "get_double", mTokyoTyrant_get_double, 1);
   rb_define_method(mTokyoTyrant, "sync", mTokyoTyrant_sync, 0);
   rb_define_method(mTokyoTyrant, "optimize", mTokyoTyrant_optimize, -1);

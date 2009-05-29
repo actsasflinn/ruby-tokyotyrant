@@ -228,6 +228,16 @@ describe TokyoTyrant::Table, "with an open database" do
     @db[key].should == { :title => 'Bean Counter', :_num => "2" }
   end
 
+  it "should increment integer values" do
+    key = 'counter'
+    @db.out(key)
+    @db[key] = { :title => 'Bean Counter' }
+    @db.increment(key).should == 1
+    @db.increment(key, 2).should == 3
+    @db.get_int(key).should == 3
+    @db[key].should == { :title => 'Bean Counter', :_num => "3" }
+  end
+
   it "should add serialized double values" do
     key = 'counter'
     @db.out(key)
