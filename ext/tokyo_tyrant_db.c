@@ -11,16 +11,16 @@ static VALUE cDB_put_method(VALUE vself, VALUE vkey, VALUE vstr, int method){
 
   switch(method){
     case TTPUT:
-      res = tcrdbput2(db, RSTRING_PTR(vkey), RSTRING_PTR(vstr));
+      res = tcrdbput(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), RSTRING_PTR(vstr), RSTRING_LEN(vstr));
       break;
     case TTPUTKEEP:
-      res = tcrdbputkeep2(db, RSTRING_PTR(vkey), RSTRING_PTR(vstr));
+      res = tcrdbputkeep(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), RSTRING_PTR(vstr), RSTRING_LEN(vstr));
       break;
     case TTPUTCAT:
-      res = tcrdbputcat2(db, RSTRING_PTR(vkey), RSTRING_PTR(vstr));
+      res = tcrdbputcat(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), RSTRING_PTR(vstr), RSTRING_LEN(vstr));
       break;
     case TTPUTNR:
-      res = tcrdbputnr2(db, RSTRING_PTR(vkey), RSTRING_PTR(vstr));
+      res = tcrdbputnr(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), RSTRING_PTR(vstr), RSTRING_LEN(vstr));
       break;
     default:
       res = false;
@@ -32,7 +32,7 @@ static VALUE cDB_put_method(VALUE vself, VALUE vkey, VALUE vstr, int method){
     rb_raise(eTokyoTyrantError, "put error: %s", tcrdberrmsg(ecode));
   }
 
-  return Qtrue;  
+  return Qtrue;
 }
 
 static VALUE cDB_put(VALUE vself, VALUE vkey, VALUE vstr){

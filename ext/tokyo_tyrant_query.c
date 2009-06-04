@@ -109,7 +109,7 @@ static VALUE cQuery_searchcount(VALUE vself){
 static VALUE cQuery_get(VALUE vself){
   int i, num, ksiz;
   const char *name, *col, *pkey;
-  VALUE vqry, vary, vcols, vpkey;
+  VALUE vqry, vary, vcols, vpkey, vname;
   RDBQRY *qry;
   TCLIST *res;
   TCMAP *cols;
@@ -120,7 +120,7 @@ static VALUE cQuery_get(VALUE vself){
   num = tclistnum(res);
   vary = rb_ary_new2(num);
   vpkey = rb_iv_get(vself, "@pkey");
-  pkey = vpkey == Qnil ? "__id" : STR2CSTR(StringValueEx(vpkey));
+  if(vpkey == Qnil) vpkey = rb_str_new2("__id");
   for(i = 0; i < num; i++){
     vcols = rb_hash_new();
     cols = tcrdbqryrescols(res, i);
@@ -128,8 +128,8 @@ static VALUE cQuery_get(VALUE vself){
       tcmapiterinit(cols);
       while((name = tcmapiternext(cols, &ksiz)) != NULL){
         col = tcmapget2(cols, name);
-        if (ksiz == 0) name = pkey;
-        rb_hash_aset(vcols, ID2SYM(rb_intern(name)), rb_str_new2(col));
+        vname = ksiz == 0 ? vpkey : rb_str_new2(name);
+        rb_hash_aset(vcols, vname, rb_str_new2(col));
       }
     }
     tcmapdel(cols);

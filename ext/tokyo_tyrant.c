@@ -103,19 +103,6 @@ extern VALUE maptovhash(TCMAP *map){
   return vhash;
 }
 
-extern VALUE maptovhashsym(TCMAP *map){
-  const char *kbuf;
-  int ksiz, vsiz;
-  VALUE vhash;
-  vhash = rb_hash_new();
-  tcmapiterinit(map);
-  while((kbuf = tcmapiternext(map, &ksiz)) != NULL){
-    const char *vbuf = tcmapiterval(kbuf, &vsiz);
-    rb_hash_aset(vhash, ID2SYM(rb_intern(kbuf)), StringRaw(vbuf, vsiz));
-  }
-  return vhash;
-}
-
 extern TCMAP *varytomap(VALUE vary){
   int i;
   TCLIST *keys;

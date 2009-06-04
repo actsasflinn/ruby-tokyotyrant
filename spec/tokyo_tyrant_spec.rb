@@ -39,6 +39,12 @@ describe TokyoTyrant::DB, "with an open database" do
     @db[:salad].should == 'bacon bits'
   end
 
+  it "should accept binary data" do
+    s = "mango#{0.chr}salsa"
+    @db.put(s, s).should.be.true
+    @db[s].should.equal(s)
+  end
+
   it "should save multiple values" do
     h = { 'pizza' => 'old forge style',
           'sandwich' => 'peanut butter jelly',

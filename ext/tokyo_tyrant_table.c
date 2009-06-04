@@ -109,7 +109,7 @@ static VALUE cTable_get(VALUE vself, VALUE vkey){
     }
     return Qnil;
   } else {
-    vcols = maptovhashsym(cols);
+    vcols = maptovhash(cols);
   }
 
   tcmapdel(cols);
@@ -150,7 +150,7 @@ static VALUE cTable_mget(int argc, VALUE *argv, VALUE vself){
   while((kbuf = tcmapiternext(recs, &ksiz)) != NULL){
     const char *vbuf = tcmapiterval(kbuf, &vsiz);
     cols = tcstrsplit4(vbuf, vsiz);
-    vcols = maptovhashsym(cols);
+    vcols = maptovhash(cols);
     tcmapdel(cols);
     rb_hash_aset(vhash, StringRaw(kbuf, ksiz), vcols);
   }
@@ -187,7 +187,7 @@ static VALUE cTable_fetch(int argc, VALUE *argv, VALUE vself){
   vkey = StringValueEx(vkey);
   Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
   if((cols = tcrdbtblget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey))) != NULL){
-    vval = maptovhashsym(cols);
+    vval = maptovhash(cols);
     tcmapdel(cols);
   } else {
     vval = vdef;
@@ -207,7 +207,7 @@ static VALUE cTable_each(VALUE vself){
   tcrdbiterinit(db);
   while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
     if((cols = tcrdbtblget(db, kbuf, ksiz)) != NULL){
-      vrv = rb_yield_values(2, rb_str_new(kbuf, ksiz), maptovhashsym(cols));
+      vrv = rb_yield_values(2, rb_str_new(kbuf, ksiz), maptovhash(cols));
       tcmapdel(cols);
     } else {
       vrv = rb_yield_values(2, rb_str_new(kbuf, ksiz), Qnil);
@@ -229,7 +229,7 @@ static VALUE cTable_each_value(VALUE vself){
   tcrdbiterinit(db);
   while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
     if((cols = tcrdbtblget(db, kbuf, ksiz)) != NULL){
-      vrv = rb_yield(maptovhashsym(cols));
+      vrv = rb_yield(maptovhash(cols));
       tcmapdel(cols);
     } else {
       vrv = rb_yield(Qnil);
@@ -250,7 +250,7 @@ static VALUE cTable_values(VALUE vself){
   tcrdbiterinit(db);
   while((kxstr = tcrdbiternext(db, &ksiz)) != NULL){
     cols = tcrdbtblget(db, kxstr, ksiz);
-    rb_ary_push(vary, maptovhashsym(cols));
+    rb_ary_push(vary, maptovhash(cols));
     tcmapdel(cols);
     tcfree(kxstr);
   }

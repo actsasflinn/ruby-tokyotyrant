@@ -28,8 +28,8 @@ describe TokyoTyrant::Query, "with an open database" do
 
   it "should get ordered keys for search conditions with default order" do
     q = @db.query
-    q.addcond(:type, :streq, 'Spinach')
-    q.setorder(:variety)
+    q.addcond('type', :streq, 'Spinach')
+    q.setorder('variety')
     q.search.should == ["3332", "34173"]
   end
 
@@ -66,29 +66,29 @@ describe TokyoTyrant::Query, "with an open database" do
   it "should get records for search conditions" do
     q = @db.query
     q.addcond('type', :streq, 'Garlic')
-    res = q.get.sort{ |x,y| x[:variety] <=> y[:variety] }
-    res.should == [{ :__id => "4609", :variety => "Elephant", :code => "4609", :type => "Garlic" },
-                   { :__id => "3401", :variety => "One-clove types", :code => "3401", :type => "Garlic" },
-                   { :__id => "3052", :variety => "String", :code => "3052", :type => "Garlic" }]
+    res = q.get.sort{ |x,y| x['variety'] <=> y['variety'] }
+    res.should == [{ '__id' => "4609", 'variety' => "Elephant", 'code' => "4609", 'type' => "Garlic" },
+                   { '__id' => "3401", 'variety' => "One-clove types", 'code' => "3401", 'type' => "Garlic" },
+                   { '__id' => "3052", 'variety' => "String", 'code' => "3052", 'type' => "Garlic" }]
   end
 
   it "should remove records for conditions" do
     q = @db.query
-    q.addcond(:type, :streq, 'Orange')
+    q.addcond('type', :streq, 'Orange')
     q.search.size.should == 11
     q.searchout.should.be.true
     q.search.size.should == 0
   end
 
   it "should chain search options" do
-    res = @db.query.condition(:type, :streq, 'Cucumber').order_by(:variety, :strdesc).limit(3).search
+    res = @db.query.condition('type', :streq, 'Cucumber').order_by('variety', :strdesc).limit(3).search
     res.should == ["4596", "4595", "4594"]
   end
 
   it "should query with a block" do
     res = @db.query do |q|
-      q.condition(:type, :streq, 'Cucumber')
-      q.order_by(:variety, :strdesc)
+      q.condition('type', :streq, 'Cucumber')
+      q.order_by('variety', :strdesc)
       q.limit(3)
     end
     res.should == ["4596", "4595", "4594"]
@@ -96,28 +96,28 @@ describe TokyoTyrant::Query, "with an open database" do
 
   it "should find with a block" do
     res = @db.find do |q|
-      q.condition(:type, :streq, 'Cucumber')
-      q.order_by(:variety, :strdesc)
+      q.condition('type', :streq, 'Cucumber')
+      q.order_by('variety', :strdesc)
       q.limit(3)
     end
-    res.should == [{:type=>"Cucumber", :variety=>"Pickling / Gherkin", :__id=>"4596", :code=>"4596"},
-                   {:type=>"Cucumber", :variety=>"Lemon", :__id=>"4595", :code=>"4595"},
-                   {:type=>"Cucumber", :variety=>"Japanese / White", :__id=>"4594", :code=>"4594"}]
+    res.should == [{'type'=>"Cucumber", 'variety'=>"Pickling / Gherkin", '__id'=>"4596", 'code'=>"4596"},
+                   {'type'=>"Cucumber", 'variety'=>"Lemon", '__id'=>"4595", 'code'=>"4595"},
+                   {'type'=>"Cucumber", 'variety'=>"Japanese / White", '__id'=>"4594", 'code'=>"4594"}]
   end
 
   it "should show query count" do
-    res = @db.prepare_query{ |q| q.condition(:type, :streq, 'Cucumber') }.count
+    res = @db.prepare_query{ |q| q.condition('type', :streq, 'Cucumber') }.count
     res.should == 5
   end
 
   it "should allow a custom pkey for a result set" do
     q = @db.query
-    q.condition(:type, :streq, 'Cucumber')
+    q.condition('type', :streq, 'Cucumber')
     q.set_pkey(:pk)
-    q.get.should == [{:type=>"Cucumber", :code=>"4592", :pk=>"4592", :variety=>"Armenian"},
-                     {:type=>"Cucumber", :code=>"4593", :pk=>"4593", :variety=>"English / Hot House / Long Seedless / Telegraph / Continental"},
-                     {:type=>"Cucumber", :code=>"4594", :pk=>"4594", :variety=>"Japanese / White"},
-                     {:type=>"Cucumber", :code=>"4595", :pk=>"4595", :variety=>"Lemon"},
-                     {:type=>"Cucumber", :code=>"4596", :pk=>"4596", :variety=>"Pickling / Gherkin"}]
+    q.get.should == [{'type'=>"Cucumber", 'code'=>"4592", :pk=>"4592", 'variety'=>"Armenian"},
+                     {'type'=>"Cucumber", 'code'=>"4593", :pk=>"4593", 'variety'=>"English / Hot House / Long Seedless / Telegraph / Continental"},
+                     {'type'=>"Cucumber", 'code'=>"4594", :pk=>"4594", 'variety'=>"Japanese / White"},
+                     {'type'=>"Cucumber", 'code'=>"4595", :pk=>"4595", 'variety'=>"Lemon"},
+                     {'type'=>"Cucumber", 'code'=>"4596", :pk=>"4596", 'variety'=>"Pickling / Gherkin"}]
   end
 end
