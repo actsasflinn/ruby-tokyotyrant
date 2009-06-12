@@ -66,7 +66,7 @@ static VALUE cDB_putshl(VALUE vself, VALUE vkey, VALUE vstr, VALUE vwidth){
   vkey = StringValueEx(vkey);
   vstr = StringValueEx(vstr);
 
-  res = tcrdbputshl2(db, RSTRING_PTR(vkey), RSTRING_PTR(vstr), FIXNUM_P(vwidth));
+  res = tcrdbputshl(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), RSTRING_PTR(vstr), RSTRING_LEN(vstr), FIXNUM_P(vwidth));
 
   if(!res) mTokyoTyrant_exception(vself);
 
@@ -130,7 +130,7 @@ static VALUE cDB_vsiz(VALUE vself, VALUE vkey){
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
   vkey = StringValueEx(vkey);
-  return INT2NUM(tcrdbvsiz2(db, RSTRING_PTR(vkey)));
+  return INT2NUM(tcrdbvsiz(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey)));
 }
 
 static VALUE cDB_fetch(int argc, VALUE *argv, VALUE vself){

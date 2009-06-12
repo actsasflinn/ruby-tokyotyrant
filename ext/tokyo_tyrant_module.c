@@ -85,7 +85,7 @@ static VALUE mTokyoTyrant_out(VALUE vself, VALUE vkey){
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
   vkey = StringValueEx(vkey);
-  return tcrdbout2(db, RSTRING_PTR(vkey)) ? Qtrue : Qfalse;
+  return tcrdbout(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey)) ? Qtrue : Qfalse;
 }
 
 // TODO: merge out and mout?
@@ -124,7 +124,7 @@ static VALUE mTokyoTyrant_check(VALUE vself, VALUE vkey){
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
   vkey = StringValueEx(vkey);
-  return tcrdbvsiz2(db, RSTRING_PTR(vkey)) >= 0 ? Qtrue : Qfalse;
+  return tcrdbvsiz(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey)) >= 0 ? Qtrue : Qfalse;
 }
 
 static VALUE mTokyoTyrant_iterinit(VALUE vself){
