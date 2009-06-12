@@ -216,7 +216,7 @@ void init_db(){
   rb_define_alias(cDB, "[]=", "put");
   rb_define_method(cDB, "putkeep", cDB_putkeep, 2);
   rb_define_method(cDB, "putcat", cDB_putcat, 2);
-  rb_define_method(cDB, "putshl", cDB_putshl, 2);
+  rb_define_method(cDB, "putshl", cDB_putshl, 3);
   rb_define_method(cDB, "putnr", cDB_putnr, 2);
   rb_define_method(cDB, "get", cDB_get, 1);
   rb_define_alias(cDB, "[]", "get");

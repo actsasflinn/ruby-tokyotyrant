@@ -108,7 +108,7 @@ static VALUE cQuery_searchcount(VALUE vself){
 
 static VALUE cQuery_get(VALUE vself){
   int i, num, ksiz;
-  const char *name, *col, *pkey;
+  const char *name, *col;
   VALUE vqry, vary, vcols, vpkey, vname;
   RDBQRY *qry;
   TCLIST *res;

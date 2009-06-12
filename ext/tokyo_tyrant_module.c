@@ -11,7 +11,7 @@ static void mTokyoTyrant_free(TCRDB *db){
 }
 
 static VALUE mTokyoTyrant_server(VALUE vself){
-  return rb_iv_get(vself, "@server");;
+  return rb_iv_get(vself, "@server");
 }
 
 static VALUE mTokyoTyrant_close(VALUE vself){
@@ -384,7 +384,7 @@ void init_mod(){
   rb_define_alias(mTokyoTyrant, "increment", "add_int");
   rb_define_method(mTokyoTyrant, "get_int", mTokyoTyrant_get_int, 1);
   rb_define_method(mTokyoTyrant, "add_double", mTokyoTyrant_add_double, -1);
-  rb_define_alias(mTokyoTyrant, "adddouble", "adddouble");
+  rb_define_alias(mTokyoTyrant, "adddouble", "add_double");
   rb_define_method(mTokyoTyrant, "get_double", mTokyoTyrant_get_double, 1);
   rb_define_method(mTokyoTyrant, "sync", mTokyoTyrant_sync, 0);
   rb_define_method(mTokyoTyrant, "optimize", mTokyoTyrant_optimize, -1);
