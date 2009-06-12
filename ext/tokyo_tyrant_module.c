@@ -314,9 +314,8 @@ static VALUE mTokyoTyrant_stat(VALUE vself){
 }
 
 static VALUE mTokyoTyrant_misc(int argc, VALUE *argv, VALUE vself){
-  VALUE vname, vopts, vargs;
+  VALUE vname, vopts, vargs, vary;
   TCLIST *list, *args;
-  VALUE vary;
   TCRDB *db = mTokyoTyrant_getdb(vself);
   rb_scan_args(argc, argv, "13", &vname, &vopts, &vargs);
 
