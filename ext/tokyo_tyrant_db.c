@@ -1,7 +1,6 @@
 #include <tokyo_tyrant_db.h>
 
 static VALUE cDB_put_method(VALUE vself, VALUE vkey, VALUE vstr, int method){
-  int ecode;
   bool res;
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
@@ -26,10 +25,7 @@ static VALUE cDB_put_method(VALUE vself, VALUE vkey, VALUE vstr, int method){
       break;
   }
 
-  if(!res){
-    ecode = tcrdbecode(db);
-    rb_raise(eTokyoTyrantError, "put error: %s", tcrdberrmsg(ecode));
-  }
+  if(!res) mTokyoTyrant_exception(vself);
 
   return Qtrue;
 }
@@ -64,16 +60,15 @@ static VALUE cDB_putnr(VALUE vself, VALUE vkey, VALUE vstr){
 }
 
 static VALUE cDB_putshl(VALUE vself, VALUE vkey, VALUE vstr, VALUE vwidth){
-  int ecode;
+  bool res;
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
   vkey = StringValueEx(vkey);
   vstr = StringValueEx(vstr);
 
-  if(!tcrdbputshl2(db, RSTRING_PTR(vkey), RSTRING_PTR(vstr), FIXNUM_P(vwidth))){
-    ecode = tcrdbecode(db);
-    rb_raise(eTokyoTyrantError, "put error: %s", tcrdberrmsg(ecode));
-  }
+  res = tcrdbputshl2(db, RSTRING_PTR(vkey), RSTRING_PTR(vstr), FIXNUM_P(vwidth));
+
+  if(!res) mTokyoTyrant_exception(vself);
 
   return Qtrue;
 }
@@ -88,9 +83,7 @@ static VALUE cDB_get(VALUE vself, VALUE vkey){
   vkey = StringValueEx(vkey);
   if(!(buf = tcrdbget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), &bsiz))){
     if ((ecode = tcrdbecode(db))) {
-      if (ecode != TTENOREC) {
-        rb_raise(eTokyoTyrantError, "get error: %s", tcrdberrmsg(ecode));
-      }
+      if (ecode != TTENOREC) mTokyoTyrant_exception(vself);
     }
     return Qnil;
   } else {

@@ -6,6 +6,14 @@ extern TCRDB *mTokyoTyrant_getdb(VALUE vself){
   return db;
 }
 
+extern void mTokyoTyrant_exception(VALUE vself){
+  int ecode;
+  TCRDB *db = mTokyoTyrant_getdb(vself);
+
+  ecode = tcrdbecode(db);
+  rb_raise(eTokyoTyrantError, tcrdberrmsg(ecode));
+}
+
 static void mTokyoTyrant_free(TCRDB *db){
   tcrdbdel(db);
 }

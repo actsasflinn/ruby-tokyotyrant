@@ -1,7 +1,6 @@
 #include <tokyo_tyrant_table.h>
 
 static VALUE cTable_put_method(VALUE vself, VALUE vkey, VALUE vcols, int method){
-  int ecode;
   bool res;
   TCMAP *cols;
   TCRDB *db = mTokyoTyrant_getdb(vself);
@@ -26,12 +25,8 @@ static VALUE cTable_put_method(VALUE vself, VALUE vkey, VALUE vcols, int method)
       break;
   }
 
-  if(!res){
-    ecode = tcrdbecode(db);
-    rb_raise(eTokyoTyrantError, "put error: %s\n", tcrdberrmsg(ecode));
-  }
+  if(!res) mTokyoTyrant_exception(vself);
   tcmapdel(cols);
-
   return Qtrue;
 }
 
@@ -99,9 +94,7 @@ static VALUE cTable_get(VALUE vself, VALUE vkey){
   vkey = StringValueEx(vkey);
   if(!(cols = tcrdbtblget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey)))){
     if ((ecode = tcrdbecode(db))) {
-      if (ecode != TTENOREC) {
-        rb_raise(eTokyoTyrantError, "get error: %s", tcrdberrmsg(ecode));
-      }
+      if (ecode != TTENOREC) mTokyoTyrant_exception(vself);
     }
     return Qnil;
   } else {
