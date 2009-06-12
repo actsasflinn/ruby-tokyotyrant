@@ -4,8 +4,7 @@ static VALUE cTable_put_method(VALUE vself, VALUE vkey, VALUE vcols, int method)
   int ecode;
   bool res;
   TCMAP *cols;
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   vkey = StringValueEx(vkey);
   Check_Type(vcols, T_HASH);
@@ -43,9 +42,8 @@ static VALUE cTable_put(VALUE vself, VALUE vkey, VALUE vcols){
 static VALUE cTable_mput(VALUE vself, VALUE vhash){
   int i, num, j;
   VALUE vary, vkeys, vkey, vval;
-  TCRDB *db;
   TCLIST *list, *result;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   vkeys = rb_funcall(vhash, rb_intern("keys"), 0);
   num = RARRAY_LEN(vkeys);
@@ -86,8 +84,7 @@ static VALUE cTable_putcat(VALUE vself, VALUE vkey, VALUE vcols){
 }
 
 static VALUE cTable_out(VALUE vself, VALUE vkey){
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   vkey = StringValueEx(vkey);
 
   return tcrdbtblout(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey)) ? Qtrue : Qfalse;
@@ -96,9 +93,8 @@ static VALUE cTable_out(VALUE vself, VALUE vkey){
 static VALUE cTable_get(VALUE vself, VALUE vkey){
   VALUE vcols;
   int ecode;
-  TCRDB *db;
   TCMAP *cols;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   vkey = StringValueEx(vkey);
   if(!(cols = tcrdbtblget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey)))){
@@ -120,9 +116,8 @@ static VALUE cTable_mget(int argc, VALUE *argv, VALUE vself){
   const char *kbuf;
   int ksiz, vsiz;
   VALUE vkeys, vhash, vcols, vvalue;
-  TCRDB *db;
   TCMAP *recs, *cols;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   rb_scan_args(argc, argv, "*", &vkeys);
 
   // I really hope there is a better way to do this
@@ -159,8 +154,7 @@ static VALUE cTable_mget(int argc, VALUE *argv, VALUE vself){
 }
 
 static VALUE cTable_setindex(VALUE vself, VALUE vname, VALUE vtype){
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   vname = StringValueEx(vname);
   if (TYPE(vtype) == T_SYMBOL) vtype = rb_str_new2(rb_id2name(SYM2ID(vtype)));
 
@@ -174,18 +168,16 @@ static VALUE cTable_setindex(VALUE vself, VALUE vname, VALUE vtype){
 }
 
 static VALUE cTable_genuid(VALUE vself){
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   return LL2NUM(tcrdbtblgenuid(db));
 }
 
 static VALUE cTable_fetch(int argc, VALUE *argv, VALUE vself){
   VALUE vkey, vdef, vval;
-  TCRDB *db;
   TCMAP *cols;
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   rb_scan_args(argc, argv, "11", &vkey, &vdef);
   vkey = StringValueEx(vkey);
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
   if((cols = tcrdbtblget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey))) != NULL){
     vval = maptovhash(cols);
     tcmapdel(cols);
@@ -197,12 +189,11 @@ static VALUE cTable_fetch(int argc, VALUE *argv, VALUE vself){
 
 static VALUE cTable_each(VALUE vself){
   VALUE vrv;
-  TCRDB *db;
   TCMAP *cols;
   char *kbuf;
   int ksiz;
   if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   vrv = Qnil;
   tcrdbiterinit(db);
   while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
@@ -219,12 +210,11 @@ static VALUE cTable_each(VALUE vself){
 
 static VALUE cTable_each_value(VALUE vself){
   VALUE vrv;
-  TCRDB *db;
   TCMAP *cols;
   char *kbuf;
   int ksiz;
   if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   vrv = Qnil;
   tcrdbiterinit(db);
   while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
@@ -241,11 +231,10 @@ static VALUE cTable_each_value(VALUE vself){
 
 static VALUE cTable_values(VALUE vself){
   VALUE vary;
-  TCRDB *db;
   TCMAP *cols;
   char *kxstr;
   int ksiz;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   vary = rb_ary_new2(tcrdbrnum(db));
   tcrdbiterinit(db);
   while((kxstr = tcrdbiternext(db, &ksiz)) != NULL){

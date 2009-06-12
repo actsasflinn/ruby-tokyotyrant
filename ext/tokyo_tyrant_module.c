@@ -1,5 +1,11 @@
 #include <tokyo_tyrant_db.h>
 
+extern TCRDB *mTokyoTyrant_getdb(VALUE vself){
+  TCRDB *db;
+  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  return db;
+}
+
 static void mTokyoTyrant_free(TCRDB *db){
   tcrdbdel(db);
 }
@@ -10,8 +16,7 @@ static VALUE mTokyoTyrant_server(VALUE vself){
 
 static VALUE mTokyoTyrant_close(VALUE vself){
   int ecode;
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   if(!tcrdbclose(db)){
     ecode = tcrdbecode(db);
@@ -54,8 +59,7 @@ static VALUE mTokyoTyrant_errmsg(int argc, VALUE *argv, VALUE vself){
   VALUE vecode;
   const char *msg;
   int ecode;
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   rb_scan_args(argc, argv, "01", &vecode);
 
   ecode = (vecode == Qnil) ? tcrdbecode(db) : NUM2INT(vecode);
@@ -64,15 +68,13 @@ static VALUE mTokyoTyrant_errmsg(int argc, VALUE *argv, VALUE vself){
 }
 
 static VALUE mTokyoTyrant_ecode(VALUE vself){
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   return INT2NUM(tcrdbecode(db));
 }
 
 static VALUE mTokyoTyrant_out(VALUE vself, VALUE vkey){
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   vkey = StringValueEx(vkey);
   return tcrdbout2(db, RSTRING_PTR(vkey)) ? Qtrue : Qfalse;
@@ -81,9 +83,8 @@ static VALUE mTokyoTyrant_out(VALUE vself, VALUE vkey){
 // TODO: merge out and mout?
 static VALUE mTokyoTyrant_outlist(int argc, VALUE *argv, VALUE vself){
   VALUE vkeys, vary, vvalue;
-  TCRDB *db;
   TCLIST *list, *result;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   rb_scan_args(argc, argv, "*", &vkeys);
 
   // I really hope there is a better way to do this
@@ -112,16 +113,14 @@ static VALUE mTokyoTyrant_outlist(int argc, VALUE *argv, VALUE vself){
 }
 
 static VALUE mTokyoTyrant_check(VALUE vself, VALUE vkey){
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   vkey = StringValueEx(vkey);
   return tcrdbvsiz2(db, RSTRING_PTR(vkey)) >= 0 ? Qtrue : Qfalse;
 }
 
 static VALUE mTokyoTyrant_iterinit(VALUE vself){
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   return tcrdbiterinit(db) ? Qtrue : Qfalse;
 }
@@ -129,8 +128,7 @@ static VALUE mTokyoTyrant_iterinit(VALUE vself){
 static VALUE mTokyoTyrant_iternext(VALUE vself){
   VALUE vval;
   char *vbuf;
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   if(!(vbuf = tcrdbiternext2(db))) return Qnil;
   vval = rb_str_new2(vbuf);
@@ -143,8 +141,7 @@ static VALUE mTokyoTyrant_fwmkeys(int argc, VALUE *argv, VALUE vself){
   VALUE vprefix, vmax, vary;
   TCLIST *keys;
   int max;
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   rb_scan_args(argc, argv, "11", &vprefix, &vmax);
 
   vprefix = StringValueEx(vprefix);
@@ -159,8 +156,7 @@ static VALUE mTokyoTyrant_delete_keys_with_prefix(int argc, VALUE *argv, VALUE v
   VALUE vprefix, vmax;
   TCLIST *keys;
   int max;
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   rb_scan_args(argc, argv, "11", &vprefix, &vmax);
 
   vprefix = StringValueEx(vprefix);
@@ -174,9 +170,8 @@ static VALUE mTokyoTyrant_delete_keys_with_prefix(int argc, VALUE *argv, VALUE v
 static VALUE mTokyoTyrant_keys(VALUE vself){
   /*
   VALUE vary;
-  TCRDB *db;
   char *kxstr;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   vary = rb_ary_new2(tcrdbrnum(db));
   tcrdbiterinit(db);
   while((kxstr = tcrdbiternext2(db)) != NULL){
@@ -188,9 +183,8 @@ static VALUE mTokyoTyrant_keys(VALUE vself){
   // Using forward matching keys with an empty string is 100x faster than iternext+get
   VALUE vary;
   TCLIST *keys;
-  TCRDB *db;
   char *prefix;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   prefix = "";
   keys = tcrdbfwmkeys2(db, prefix, -1);
   vary = listtovary(keys);
@@ -199,8 +193,7 @@ static VALUE mTokyoTyrant_keys(VALUE vself){
 }
 
 static VALUE mTokyoTyrant_addint(VALUE vself, VALUE vkey, int inum){
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   vkey = StringValueEx(vkey);
 
   inum = tcrdbaddint(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), inum);
@@ -223,8 +216,7 @@ static VALUE mTokyoTyrant_get_int(VALUE vself, VALUE vkey){
 }
 
 static VALUE mTokyoTyrant_adddouble(VALUE vself, VALUE vkey, double dnum){
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   vkey = StringValueEx(vkey);
   dnum = tcrdbadddouble(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), dnum);
@@ -247,8 +239,7 @@ static VALUE mTokyoTyrant_get_double(VALUE vself, VALUE vkey){
 }
 
 static VALUE mTokyoTyrant_sync(VALUE vself){
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   return tcrdbsync(db) ? Qtrue : Qfalse;
 }
@@ -256,8 +247,7 @@ static VALUE mTokyoTyrant_sync(VALUE vself){
 static VALUE mTokyoTyrant_optimize(int argc, VALUE *argv, VALUE vself){
   VALUE vparams;
   const char *params = NULL;
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   rb_scan_args(argc, argv, "01", &vparams);
   if(NIL_P(vparams)) vparams = Qnil;
   if(vparams != Qnil) params = RSTRING_PTR(vparams);
@@ -266,15 +256,13 @@ static VALUE mTokyoTyrant_optimize(int argc, VALUE *argv, VALUE vself){
 }
 
 static VALUE mTokyoTyrant_vanish(VALUE vself){
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   return tcrdbvanish(db) ? Qtrue : Qfalse;
 }
 
 static VALUE mTokyoTyrant_copy(VALUE vself, VALUE path){
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   Check_Type(path, T_STRING);
   return tcrdbcopy(db, RSTRING_PTR(path)) ? Qtrue : Qfalse;
@@ -283,8 +271,7 @@ static VALUE mTokyoTyrant_copy(VALUE vself, VALUE path){
 static VALUE mTokyoTyrant_restore(VALUE vself, VALUE vpath, VALUE vts, VALUE vopts){
   uint64_t ts;
   int opts;
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   Check_Type(vpath, T_STRING);
   ts = (uint64_t) FIX2INT(vts);
@@ -295,8 +282,7 @@ static VALUE mTokyoTyrant_restore(VALUE vself, VALUE vpath, VALUE vts, VALUE vop
 static VALUE mTokyoTyrant_setmst(VALUE vself, VALUE vhost, VALUE vport, VALUE vts, VALUE vopts){
   uint64_t ts;
   int opts;
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   ts = (uint64_t) FIX2INT(vts);
   opts = FIX2INT(vopts);
@@ -304,39 +290,34 @@ static VALUE mTokyoTyrant_setmst(VALUE vself, VALUE vhost, VALUE vport, VALUE vt
 }
 
 static VALUE mTokyoTyrant_rnum(VALUE vself){
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   return LL2NUM(tcrdbrnum(db));
 }
 
 static VALUE mTokyoTyrant_empty(VALUE vself){
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   return tcrdbrnum(db) < 1 ? Qtrue : Qfalse;
 }
 
 static VALUE mTokyoTyrant_size(VALUE vself){
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   return LL2NUM(tcrdbsize(db));
 }
 
 static VALUE mTokyoTyrant_stat(VALUE vself){
-  TCRDB *db;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
 
   return rb_str_new2(tcrdbstat(db));
 }
 
 static VALUE mTokyoTyrant_misc(int argc, VALUE *argv, VALUE vself){
   VALUE vname, vopts, vargs;
-  TCRDB *db;
   TCLIST *list, *args;
   VALUE vary;
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   rb_scan_args(argc, argv, "13", &vname, &vopts, &vargs);
 
   args = varytolist(vargs);
@@ -350,10 +331,9 @@ static VALUE mTokyoTyrant_misc(int argc, VALUE *argv, VALUE vself){
 
 static VALUE mTokyoTyrant_each_key(VALUE vself){
   VALUE vrv;
-  TCRDB *db;
   char *kxstr;
   if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
-  Data_Get_Struct(rb_iv_get(vself, RDBVNDATA), TCRDB, db);
+  TCRDB *db = mTokyoTyrant_getdb(vself);
   vrv = Qnil;
   tcrdbiterinit(db);
   while((kxstr = tcrdbiternext2(db)) != NULL){
