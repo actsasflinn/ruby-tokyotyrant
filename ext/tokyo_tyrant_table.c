@@ -160,6 +160,14 @@ static VALUE cTable_setindex(VALUE vself, VALUE vname, VALUE vtype){
   return tcrdbtblsetindex(db, RSTRING_PTR(vname), NUM2INT(vtype)) ? Qtrue : Qfalse;
 }
 
+static VALUE cTable_run(VALUE vself, VALUE vext, VALUE vkey, VALUE vvalue) {
+  TCRDB *db = mTokyoTyrant_getdb(vself);
+  vext = StringValueEx(vext);
+  vkey = StringValueEx(vkey);
+  vvalue = StringValueEx(vvalue);
+  return rb_str_new2(tcrdbext2(db, RSTRING_PTR(vext), 0, RSTRING_PTR(vkey), RSTRING_PTR(vvalue)));
+}
+
 static VALUE cTable_genuid(VALUE vself){
   TCRDB *db = mTokyoTyrant_getdb(vself);
   return LL2NUM(tcrdbtblgenuid(db));
@@ -291,4 +299,5 @@ void init_table(){
   rb_define_method(cTable, "prepare_query", cTable_prepare_query, 0);
   rb_define_method(cTable, "query", cTable_query, 0);
   rb_define_method(cTable, "find", cTable_find, 0);
+  rb_define_method(cTable, "run", cTable_run, 3);
 }
