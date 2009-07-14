@@ -5,6 +5,7 @@
 #
 
 TMP=`pwd`/tmp
+SPEC=`pwd`/spec
   # so that tt doesn't complain about relative paths...
 
 [ -d $TMP ] || mkdir $TMP
@@ -21,5 +22,6 @@ ttserver \
   -port 45001 \
   -pid $TMP/tt_spec.pid -rts $TMP/tt_spec.rts \
   -log $TMP/tt.log \
+  -ext $SPEC/ext.lua \
   $TMP/tyrant_table.tct
 

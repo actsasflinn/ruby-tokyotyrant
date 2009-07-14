@@ -111,6 +111,8 @@ This is not in production but the initial benchmarks are very interesting. Resul
   q.get
   # => [{:sex=>"male", :name=>"Pat 1", :__id=>"1"}, {:sex=>"male", :name=>"Pat 3", :__id=>"3"}, {:sex=>"male", :name=>"Pat 5", :__id=>"5"}, {:sex=>"male", :name=>"Pat 7", :__id=>"7"}, {:sex=>"male", :name=>"Pat 9", :__id=>"9"}]
 
-== TODO
-* implement get_reverse for has_value?
-* fix up and test extensions
+== Contributors
+
+* Flinn Mueller (actsasflinn) author/maintainer
+* Justin Reagor (cheapRoc) specs
+* Seth Yates (sethyates) run method (lua ext)

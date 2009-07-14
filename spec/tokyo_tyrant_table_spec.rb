@@ -263,4 +263,8 @@ describe TokyoTyrant::Table, "with an open database" do
     end
     @db.set_index('title', :lexical).should.be.true
   end
+
+  it "should run lua extensions" do
+    @db.run(:echo, 'hello', 'world').should == "hello\tworld"
+  end
 end
