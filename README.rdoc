@@ -4,7 +4,7 @@ This is a c extension for Ruby to access TokyoTyrant databases.  It currently su
 
 == Install
 
-  # install tokyocabinet and tokyotyrant (requires 1.1.27)
+  # install tokyocabinet (1.4.29) and tokyotyrant (requires 1.1.31)
   # after installing tc and tt on linux I had to /sbin/ldconfig (as root)
   gem sources -a http://gems.github.com
   sudo gem install actsasflinn-ruby-tokyotyrant
@@ -110,6 +110,49 @@ This is not in production but the initial benchmarks are very interesting. Resul
   # => ["1", "3", "5", "7", "9"]
   q.get
   # => [{:sex=>"male", :name=>"Pat 1", :__id=>"1"}, {:sex=>"male", :name=>"Pat 3", :__id=>"3"}, {:sex=>"male", :name=>"Pat 5", :__id=>"5"}, {:sex=>"male", :name=>"Pat 7", :__id=>"7"}, {:sex=>"male", :name=>"Pat 9", :__id=>"9"}]
+
+=== Full Text Search
+
+  require 'tokyo_tyrant'
+  require 'nokogiri'
+  require 'open-uri'
+
+  t = TokyoTyrant::Table.new('127.0.0.1', 1978)
+
+  (1..13).each do |n|
+    doc = Nokogiri::HTML(open("http://www.sacred-texts.com/chr/herm/hermes#{n}.htm"))
+    chapter = doc.css('h2').last.inner_text.gsub(/\n/, '').gsub(/ +/, ' ').strip
+    doc.css('p').each_with_index do |paragraph, i|
+      paragraph = paragraph.inner_text.gsub(/\n/, '').gsub(/ +/, ' ').strip
+      key = "chapter:#{n}:paragraph:#{i+1}"
+      t[key] = { :chapter => chapter, :paragraph => paragraph }
+    end
+  end
+
+  # full-text search with the phrase of
+  t.query{ |q| q.condition(:paragraph, :fts, 'rebirth') }
+  # => ["chapter:13:paragraph:4", "chapter:13:paragraph:5", "chapter:13:paragraph:7", "chapter:13:paragraph:19", "chapter:13:paragraph:27", "chapter:13:paragraph:44", "chapter:13:paragraph:57", "chapter:13:paragraph:69", "chapter:13:paragraph:125"]
+
+  # full-text search with all tokens in
+  t.query{ |q| q.condition(:paragraph, :ftsand, 'logos word') }
+  # => ["chapter:1:paragraph:12", "chapter:1:paragraph:14", "chapter:1:paragraph:17", "chapter:1:paragraph:19", "chapter:1:paragraph:24", "chapter:1:paragraph:27", "chapter:1:paragraph:43", "chapter:1:paragraph:53", "chapter:1:paragraph:62", "chapter:1:paragraph:89", "chapter:1:paragraph:90", "chapter:1:paragraph:94", "chapter:9:paragraph:5", "chapter:9:paragraph:35", "chapter:11:paragraph:3", "chapter:13:paragraph:2", "chapter:13:paragraph:94", "chapter:13:paragraph:121"]
+
+  # full-text search with at least one token in
+  t.query{ |q| q.condition(:paragraph, :ftsor, 'sermon key') }
+  # => ["chapter:5:paragraph:1", "chapter:9:paragraph:3", "chapter:10:paragraph:1", "chapter:10:paragraph:4", "chapter:10:paragraph:28", "chapter:11:paragraph:3", "chapter:11:paragraph:66", "chapter:11:paragraph:69", "chapter:13:paragraph:4", "chapter:13:paragraph:5", "chapter:13:paragraph:69"]
+
+  # negated full-text search with at least one token in
+  t.query{ |q| q.condition(:paragraph, '!ftsor', 'the god he and I that said') }.first
+  # => "chapter:1:paragraph:95"
+
+=== Lua Extension
+
+  # ttserver -ext spec/ext.lua 
+  require 'tokyo_tyrant'
+  t = TokyoTyrant::Table.new('127.0.0.1', 1978)
+
+  t.run(:echo, 'hello', 'world')
+  # => "hello\tworld"
 
 == Contributors
 
