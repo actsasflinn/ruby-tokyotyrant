@@ -142,8 +142,8 @@ This is not in production but the initial benchmarks are very interesting. Resul
   # => ["chapter:5:paragraph:1", "chapter:9:paragraph:3", "chapter:10:paragraph:1", "chapter:10:paragraph:4", "chapter:10:paragraph:28", "chapter:11:paragraph:3", "chapter:11:paragraph:66", "chapter:11:paragraph:69", "chapter:13:paragraph:4", "chapter:13:paragraph:5", "chapter:13:paragraph:69"]
 
   # negated full-text search with at least one token in
-  t.query{ |q| q.condition(:paragraph, '!ftsor', 'the god he and I that said') }.first
-  # => "chapter:1:paragraph:95"
+  t.query{ |q| q.condition(:paragraph, '!ftsor', 'the god he and I that said') }
+  # => ["chapter:1:paragraph:95", "chapter:1:paragraph:96", "chapter:1:paragraph:97", "chapter:1:paragraph:98", "chapter:1:paragraph:99", "chapter:2:paragraph:3", "chapter:2:paragraph:5", "chapter:2:paragraph:6", "chapter:2:paragraph:7", "chapter:2:paragraph:9", "chapter:2:paragraph:11", "chapter:2:paragraph:13", "chapter:2:paragraph:15", "chapter:2:paragraph:17", "chapter:2:paragraph:19", "chapter:2:paragraph:21", "chapter:2:paragraph:36", "chapter:2:paragraph:43", "chapter:2:paragraph:47", "chapter:2:paragraph:48", "chapter:2:paragraph:49", "chapter:5:paragraph:4", "chapter:10:paragraph:27", "chapter:10:paragraph:62", "chapter:10:paragraph:64", "chapter:13:paragraph:3", "chapter:13:paragraph:9", "chapter:13:paragraph:17", "chapter:13:paragraph:24", "chapter:13:paragraph:29", "chapter:13:paragraph:32", "chapter:13:paragraph:37", "chapter:13:paragraph:45", "chapter:13:paragraph:50", "chapter:13:paragraph:56", "chapter:13:paragraph:59", "chapter:13:paragraph:63", "chapter:13:paragraph:67", "chapter:13:paragraph:70", "chapter:13:paragraph:76", "chapter:13:paragraph:82", "chapter:13:paragraph:87", "chapter:13:paragraph:88", "chapter:13:paragraph:90", "chapter:13:paragraph:98", "chapter:13:paragraph:101", "chapter:13:paragraph:105", "chapter:13:paragraph:110", "chapter:13:paragraph:113", "chapter:13:paragraph:117", "chapter:13:paragraph:123"]
 
 === Lua Extension
 
