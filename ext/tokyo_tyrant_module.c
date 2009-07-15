@@ -336,6 +336,21 @@ static VALUE mTokyoTyrant_misc(int argc, VALUE *argv, VALUE vself){
   return vary;
 }
 
+static VALUE mTokyoTyrant_ext(VALUE vself, VALUE vext, VALUE vkey, VALUE vvalue){
+  int vsiz;
+  char *vbuf;
+  TCRDB *db = mTokyoTyrant_getdb(vself);
+  vext = StringValueEx(vext);
+  vkey = StringValueEx(vkey);
+  vvalue = StringValueEx(vvalue);
+
+  if(!(vbuf = tcrdbext(db, RSTRING_PTR(vext), 0, RSTRING_PTR(vkey), RSTRING_LEN(vkey), RSTRING_PTR(vvalue), RSTRING_LEN(vvalue), &vsiz))){
+    return Qnil;
+  } else {
+    return rb_str_new(vbuf, vsiz);
+  }
+}
+
 static VALUE mTokyoTyrant_each_key(VALUE vself){
   VALUE vrv;
   char *kxstr;
@@ -408,5 +423,7 @@ void init_mod(){
   rb_define_alias(mTokyoTyrant, "length", "size");
   rb_define_method(mTokyoTyrant, "stat", mTokyoTyrant_stat, 0);
   rb_define_method(mTokyoTyrant, "misc", mTokyoTyrant_misc, -1);
+  rb_define_method(mTokyoTyrant, "ext", mTokyoTyrant_ext, 3);
+  rb_define_alias(mTokyoTyrant, "run", "ext");
   rb_define_method(mTokyoTyrant, "each_key", mTokyoTyrant_each_key, 0);
 }

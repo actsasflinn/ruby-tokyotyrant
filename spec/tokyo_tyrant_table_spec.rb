@@ -265,6 +265,6 @@ describe TokyoTyrant::Table, "with an open database" do
   end
 
   it "should run lua extensions" do
-    @db.run(:echo, 'hello', 'world').should == "hello\tworld"
+    @db.ext('echo', 'hello', 'world').should == "hello\tworld"
   end
 end

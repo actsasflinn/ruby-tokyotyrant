@@ -236,4 +236,8 @@ describe TokyoTyrant::DB, "with an open database" do
     @db.add_double(key, 1.0).should.be.close?(2.0, 0.005)
     @db.get_double(key).should.be.close?(2.0, 0.005)
   end
+
+  it "should run lua extensions" do
+    @db.ext('echo', 'hello', 'world').should == "hello\tworld"
+  end
 end
