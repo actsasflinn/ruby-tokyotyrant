@@ -20,7 +20,7 @@ CLEAN.include('pkg', 'tmp')
 
 gemspec = Gem::Specification.new do |s|
   s.name = 'ruby-tokyotyrant'
-  s.version = '0.1.8'
+  s.version = '0.1.9'
   s.authors = [ 'Flinn' ]
   s.email = 'flinn@actsasflinn.com'
   s.homepage = 'http://github.com/actsasflinn/ruby-tokyotyrant/'

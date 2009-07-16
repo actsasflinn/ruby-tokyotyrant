@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{ruby-tokyotyrant}
-  s.version = "0.1.8"
+  s.version = "0.1.9"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Flinn"]
@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.email = %q{flinn@actsasflinn.com}
   s.extensions = ["ext/extconf.rb"]
   s.extra_rdoc_files = ["README.rdoc"]
-  s.files = ["COPYING", "Rakefile", "README.rdoc", "ext/extconf.rb", "ext/tokyo_tyrant.c", "ext/tokyo_tyrant.h", "ext/tokyo_tyrant_db.c", "ext/tokyo_tyrant_db.h", "ext/tokyo_tyrant_module.c", "ext/tokyo_tyrant_module.h", "ext/tokyo_tyrant_query.c", "ext/tokyo_tyrant_query.h", "ext/tokyo_tyrant_table.c", "ext/tokyo_tyrant_table.h", "spec/plu_db.rb", "spec/spec.rb", "spec/spec_base.rb", "spec/start_tyrants.sh", "spec/stop_tyrants.sh", "spec/tokyo_tyrant_query_spec.rb", "spec/tokyo_tyrant_spec.rb", "spec/tokyo_tyrant_table_spec.rb", "benchmarks/bulk_db.rb", "benchmarks/bulk_table.rb", "benchmarks/db.rb", "benchmarks/table.rb"]
+  s.files = ["COPYING", "Rakefile", "README.rdoc", "ext/extconf.rb", "ext/tokyo_tyrant.c", "ext/tokyo_tyrant.h", "ext/tokyo_tyrant_db.c", "ext/tokyo_tyrant_db.h", "ext/tokyo_tyrant_module.c", "ext/tokyo_tyrant_module.h", "ext/tokyo_tyrant_query.c", "ext/tokyo_tyrant_query.h", "ext/tokyo_tyrant_table.c", "ext/tokyo_tyrant_table.h", "spec/ext.lua", "spec/plu_db.rb", "spec/spec.rb", "spec/spec_base.rb", "spec/start_tyrants.sh", "spec/stop_tyrants.sh", "spec/tokyo_tyrant_query_spec.rb", "spec/tokyo_tyrant_spec.rb", "spec/tokyo_tyrant_table_spec.rb", "benchmarks/bulk_db.rb", "benchmarks/bulk_table.rb", "benchmarks/db.rb", "benchmarks/table.rb"]
   s.has_rdoc = true
   s.homepage = %q{http://github.com/actsasflinn/ruby-tokyotyrant/}
   s.require_paths = ["ext"]
