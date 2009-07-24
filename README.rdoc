@@ -176,3 +176,4 @@ This is not in production but the initial benchmarks are very interesting. Resul
 * Flinn Mueller (actsasflinn) author/maintainer
 * Justin Reagor (cheapRoc) specs
 * Seth Yates (sethyates) run method (lua ext)
+* John Mettraux (jmettraux) inspiration (rufus-tokyo)
