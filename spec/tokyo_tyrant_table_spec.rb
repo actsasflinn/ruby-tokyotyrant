@@ -267,4 +267,24 @@ describe TokyoTyrant::Table, "with an open database" do
   it "should run lua extensions" do
     @db.ext('echo', 'hello', 'world').should == "hello\tworld"
   end
+
+  it "should perform meta search with multiple query objects" do
+    keys = %w[falafel humus couscous tabbouleh tzatziki peanutbutter]
+    values = [{ 'ingredient' => 'chickpeas' },
+              { 'ingredient' => 'chickpeas' },
+              { 'ingredient' => 'semolina' },
+              { 'ingredient' => 'bulgar' },
+              { 'ingredient' => 'yogurt' },
+              { 'ingredient' => 'peanuts'}]
+
+    keys.each_with_index{ |k,i| @db[k] = values[i] }
+
+    query1 = @db.prepare_query{ |q| q.condition('ingredient', :streq, 'yogurt').order_by('ingredient') }
+    query2 = @db.prepare_query{ |q| q.condition('ingredient', :streq, 'chickpeas').order_by('ingredient') }
+    query3 = @db.prepare_query{ |q| q.condition('ingredient', :ftsex, 'pea').order_by('ingredient') }
+
+    @db.search(query1, query2, :union).should == ["falafel", "humus", "tzatziki"]
+    @db.search(query1, query2, :diff).should == ["tzatziki"]
+    @db.search(query2, query3, :intersection).should == ["falafel", "humus"]
+  end
 end

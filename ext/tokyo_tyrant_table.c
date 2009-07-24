@@ -267,6 +267,49 @@ static VALUE cTable_find(VALUE vself){
   return vary;
 }
 
+static VALUE cTable_search(int argc, VALUE *argv, VALUE vself){
+  VALUE vargs, vkeys, vtype, vhash, vcols;
+  TCMAP *recs, *cols;
+  int qsiz, type, j;
+  const char *kbuf;
+  int ksiz, vsiz;
+  TCRDB *db = mTokyoTyrant_getdb(vself);
+
+  rb_scan_args(argc, argv, "*", &vargs);
+
+  vtype = rb_ary_pop(vargs);
+  qsiz = argc - 1;
+  RDBQRY *qrys[qsiz];
+
+  // tctdbmetastrtosettype
+
+  vtype = StringValueEx(vtype);
+  type = tctdbstrtometasearcytype(RSTRING_PTR(vtype));
+
+  for(j = 0; j < qsiz; j++){
+    VALUE vqry = rb_iv_get(rb_ary_entry(vargs, j), RDBQRYVNDATA);
+    Data_Get_Struct(vqry, RDBQRY, qrys[j]);
+  }
+  TCLIST *res = tcrdbmetasearch(qrys, qsiz, type);
+  vkeys = listtovary(res);
+  tclistdel(res);
+
+  recs = varytomap(vkeys);
+  if(!tcrdbget3(db, recs)) return Qnil;
+  vhash = rb_hash_new();
+  tcmapiterinit(recs);
+  while((kbuf = tcmapiternext(recs, &ksiz)) != NULL){
+    const char *vbuf = tcmapiterval(kbuf, &vsiz);
+    cols = tcstrsplit4(vbuf, vsiz);
+    vcols = maptovhash(cols);
+    tcmapdel(cols);
+    rb_hash_aset(vhash, StringRaw(kbuf, ksiz), vcols);
+  }
+  tcmapdel(recs);
+
+  return vkeys;
+}
+
 void init_table(){
   rb_define_method(cTable, "mput", cTable_mput, 1);
   rb_define_alias(cTable, "lput", "mput");                    // Rufus Compat
@@ -291,4 +334,5 @@ void init_table(){
   rb_define_method(cTable, "prepare_query", cTable_prepare_query, 0);
   rb_define_method(cTable, "query", cTable_query, 0);
   rb_define_method(cTable, "find", cTable_find, 0);
+  rb_define_method(cTable, "search", cTable_search, -1);
 }

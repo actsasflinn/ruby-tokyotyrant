@@ -120,4 +120,14 @@ describe TokyoTyrant::Query, "with an open database" do
                      {'type'=>"Cucumber", 'code'=>"4595", :pk=>"4595", 'variety'=>"Lemon"},
                      {'type'=>"Cucumber", 'code'=>"4596", :pk=>"4596", 'variety'=>"Pickling / Gherkin"}]
   end
+
+  it "should return a query hint" do
+    @db.set_index(:type, :lexical)
+    q = @db.query
+    q.condition(:type, :streq, 'Cucumber')
+    q.order_by(:code)
+    q.limit(3)
+    q.run
+    q.hint.should == "\nusing an index: \"type\" asc (STREQ)\nresult set size: 5\nsorting the result set: \"code\"\n"
+  end
 end

@@ -143,6 +143,14 @@ static VALUE cQuery_set_pkey(VALUE vself, VALUE vpkey) {
   return rb_iv_set(vself, "@pkey", vpkey);
 }
 
+static VALUE cQuery_hint(VALUE vself){
+  VALUE vqry;
+  RDBQRY *qry;
+  vqry = rb_iv_get(vself, RDBQRYVNDATA);
+  Data_Get_Struct(vqry, RDBQRY, qry);
+  return rb_str_new2(tcrdbqryhint(qry));
+}
+
 void init_query(){
   rb_define_const(cQuery, "CSTREQ", INT2NUM(RDBQCSTREQ));
   rb_define_const(cQuery, "CSTRINC", INT2NUM(RDBQCSTRINC));
@@ -185,4 +193,5 @@ void init_query(){
   rb_define_method(cQuery, "get", cQuery_get, 0);
   rb_define_method(cQuery, "set_pkey", cQuery_set_pkey, 1);
   rb_define_alias(cQuery, "pkey=", "set_pkey");
+  rb_define_method(cQuery, "hint", cQuery_hint, 0);
 }
