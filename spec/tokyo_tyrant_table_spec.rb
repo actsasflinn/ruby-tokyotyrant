@@ -283,8 +283,8 @@ describe TokyoTyrant::Table, "with an open database" do
     query2 = @db.prepare_query{ |q| q.condition('ingredient', :streq, 'chickpeas').order_by('ingredient') }
     query3 = @db.prepare_query{ |q| q.condition('ingredient', :ftsex, 'pea').order_by('ingredient') }
 
-    @db.search(query1, query2, :union).should == ["falafel", "humus", "tzatziki"]
-    @db.search(query1, query2, :diff).should == ["tzatziki"]
-    @db.search(query2, query3, :intersection).should == ["falafel", "humus"]
+    @db.search(:union, query1, query2).should == ["falafel", "humus", "tzatziki"]
+    @db.search(:diff, query1, query2).should == ["tzatziki"]
+    @db.search(:intersection, query2, query3).should == ["falafel", "humus"]
   end
 end

@@ -268,26 +268,25 @@ static VALUE cTable_find(VALUE vself){
 }
 
 static VALUE cTable_search(int argc, VALUE *argv, VALUE vself){
-  VALUE vargs, vkeys, vtype, vhash, vcols;
+  VALUE vqrys, vkeys, vtype, vhash, vcols;
   TCMAP *recs, *cols;
   int qsiz, type, j;
   const char *kbuf;
   int ksiz, vsiz;
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
-  rb_scan_args(argc, argv, "*", &vargs);
+//  rb_scan_args(argc, argv, "*", &vargs);
+  rb_scan_args(argc, argv, "1*", &vtype, &vqrys);
 
-  vtype = rb_ary_pop(vargs);
+//  vtype = rb_ary_pop(vargs);
   qsiz = argc - 1;
   RDBQRY *qrys[qsiz];
-
-  // tctdbmetastrtosettype
 
   vtype = StringValueEx(vtype);
   type = tctdbstrtometasearcytype(RSTRING_PTR(vtype));
 
   for(j = 0; j < qsiz; j++){
-    VALUE vqry = rb_iv_get(rb_ary_entry(vargs, j), RDBQRYVNDATA);
+    VALUE vqry = rb_iv_get(rb_ary_entry(vqrys, j), RDBQRYVNDATA);
     Data_Get_Struct(vqry, RDBQRY, qrys[j]);
   }
   TCLIST *res = tcrdbmetasearch(qrys, qsiz, type);

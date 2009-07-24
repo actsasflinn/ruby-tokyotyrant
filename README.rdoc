@@ -151,15 +151,15 @@ This is not in production but the initial benchmarks are very interesting. Resul
   query2 = t.prepare_query{ |q| q.condition(:paragraph, :fts, 'logos') }
 
   # Get the union of two query sets (OR)
-  t.search(query1, query2, :union)
+  t.search(:union, query1, query2)
   # => ["chapter:13:paragraph:4", "chapter:13:paragraph:5", "chapter:13:paragraph:7", "chapter:13:paragraph:19", "chapter:13:paragraph:27", "chapter:13:paragraph:44", "chapter:13:paragraph:57", "... lots more ..."]
 
   # Get the intersection of two query sets (AND)
-  t.search(query1, query2, :intersection)
+  t.search(:intersection, query1, query2)
   # => ["chapter:13:paragraph:5", "chapter:13:paragraph:44", "chapter:13:paragraph:69"]
 
   # Get the difference of two query sets (ANDNOT)
-  t.search(query1, query2, :diff)
+  t.search(:diff, query1, query2)
   # => ["chapter:13:paragraph:4", "chapter:13:paragraph:7", "chapter:13:paragraph:19", "chapter:13:paragraph:27", "chapter:13:paragraph:57", "chapter:13:paragraph:125"]
 
 === Lua Extension
