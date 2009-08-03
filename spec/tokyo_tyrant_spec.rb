@@ -171,9 +171,9 @@ describe TokyoTyrant::DB, "with an open database" do
 
   it "should fetch a record" do
     @db.out('beer')
-    @db.fetch('beer','heineken').should == 'heineken'
-    @db['beer'] = 'heineken'
-    @db.fetch('beer','becks').should == 'heineken'
+    @db.fetch('beer'){ 'heineken' }.should == 'heineken'
+    @db['beer'].should == 'heineken'
+    @db.fetch('beer'){ 'becks' }.should == 'heineken'
   end
 
   it "should iterate through records" do

@@ -166,18 +166,19 @@ static VALUE cTable_genuid(VALUE vself){
 }
 
 static VALUE cTable_fetch(int argc, VALUE *argv, VALUE vself){
-  VALUE vkey, vdef, vval;
-  TCMAP *cols;
-  TCRDB *db = mTokyoTyrant_getdb(vself);
-  rb_scan_args(argc, argv, "11", &vkey, &vdef);
+  VALUE vkey, vrv, vforce;
+  rb_scan_args(argc, argv, "11", &vkey, &vforce);
+  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+  if(vforce == Qnil) vforce = Qfalse;
   vkey = StringValueEx(vkey);
-  if((cols = tcrdbtblget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey))) != NULL){
-    vval = maptovhash(cols);
-    tcmapdel(cols);
-  } else {
-    vval = vdef;
+
+  if(vforce != Qfalse ||
+     (vrv = cTable_get(vself, vkey)) == Qnil){
+    vrv = rb_yield(vkey);
+    cTable_put(vself, vkey, vrv);
   }
-  return vval;
+
+  return vrv;
 }
 
 static VALUE cTable_each(VALUE vself){

@@ -176,9 +176,9 @@ describe TokyoTyrant::Table, "with an open database" do
 
   it "should fetch a record" do
     @db.out('beer')
-    @db.fetch('beer', { 'import' => 'heineken' }).should == { 'import' => 'heineken' }
-    @db['beer'] = { 'import' => 'heineken' }
-    @db.fetch('beer', { 'import' => 'becks' }).should == { 'import' => 'heineken' }
+    @db.fetch('beer'){{ 'import' => 'heineken' }}.should == { 'import' => 'heineken' }
+    @db['beer'].should == { 'import' => 'heineken' }
+    @db.fetch('beer'){{ 'import' => 'becks' }}.should == { 'import' => 'heineken' }
   end
 
   it "should iterate through records" do

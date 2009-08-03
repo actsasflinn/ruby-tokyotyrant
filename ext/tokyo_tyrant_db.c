@@ -134,19 +134,16 @@ static VALUE cDB_vsiz(VALUE vself, VALUE vkey){
 }
 
 static VALUE cDB_fetch(int argc, VALUE *argv, VALUE vself){
-  VALUE vkey, vdef, vval;
-  char *vbuf;
-  int vsiz;
-  rb_scan_args(argc, argv, "11", &vkey, &vdef);
-  TCRDB *db = mTokyoTyrant_getdb(vself);
-  vkey = StringValueEx(vkey);
-  if((vbuf = tcrdbget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), &vsiz)) != NULL){
-    vval = StringRaw(vbuf, vsiz);
-    tcfree(vbuf);
-  } else {
-    vval = vdef;
+  VALUE vkey, vrv, vforce;
+  rb_scan_args(argc, argv, "11", &vkey, &vforce);
+  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+  if(vforce == Qnil) vforce = Qfalse;
+
+  if(vforce != Qfalse || (vrv = cDB_get(vself, vkey)) == Qnil){
+    vrv = rb_yield(vkey);
+    cDB_put(vself, vkey, vrv);
   }
-  return vval;
+  return vrv;
 }
 
 static VALUE cDB_each(VALUE vself){
