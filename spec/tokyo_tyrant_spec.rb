@@ -240,4 +240,15 @@ describe TokyoTyrant::DB, "with an open database" do
   it "should run lua extensions" do
     @db.ext('echo', 'hello', 'world').should == "hello\tworld"
   end
+
+  it "should serialize objects that respond to to_tokyo_tyrant" do
+    class Thing
+      def to_tokyo_tyrant
+        "success"
+      end
+    end
+
+    @db["to_tokyo_tyrant"] = Thing.new
+    @db["to_tokyo_tyrant"].should == "success"
+  end
 end

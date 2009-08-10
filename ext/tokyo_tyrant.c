@@ -17,31 +17,12 @@ extern VALUE StringRaw(const char *buf, int bsiz){
 }
 
 extern VALUE StringValueEx(VALUE vobj){
-  char kbuf[NUMBUFSIZ];
-  int ksiz;
-  switch(TYPE(vobj)){
-  case T_FIXNUM:
-    ksiz = sprintf(kbuf, "%d", (int)FIX2INT(vobj));
-    return rb_str_new(kbuf, ksiz);
-  case T_BIGNUM:
-    ksiz = sprintf(kbuf, "%lld", (long long)NUM2LL(vobj));
-    return rb_str_new(kbuf, ksiz);
-  case T_SYMBOL:
-    return rb_str_new2(rb_id2name(SYM2ID(vobj)));
-  case T_TRUE:
-    ksiz = sprintf(kbuf, "true");
-    return rb_str_new(kbuf, ksiz);
-  case T_FALSE:
-    ksiz = sprintf(kbuf, "false");
-    return rb_str_new(kbuf, ksiz);
-// I don't like this, I'd rather an empty string
-//  case T_NIL:
-//    ksiz = sprintf(kbuf, "nil");
-//    return rb_str_new(kbuf, ksiz);
-  default:
-    if (rb_respond_to(vobj, rb_intern("to_s"))) {
-      return rb_convert_type(vobj, T_STRING, "String", "to_s");
-    }
+  if (rb_respond_to(vobj, rb_intern("to_tokyo_tyrant"))) {
+    return rb_convert_type(vobj, T_STRING, "String", "to_tokyo_tyrant");
+  } else if (rb_respond_to(vobj, rb_intern("to_s"))) {
+    return rb_convert_type(vobj, T_STRING, "String", "to_s");
+  } else {
+    rb_raise(rb_eArgError, "can't stringify object");
   }
   return StringValue(vobj);
 }

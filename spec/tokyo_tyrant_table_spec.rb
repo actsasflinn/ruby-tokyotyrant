@@ -287,4 +287,15 @@ describe TokyoTyrant::Table, "with an open database" do
     @db.search(:diff, query1, query2).should == ["tzatziki"]
     @db.search(:intersection, query2, query3).should == ["falafel", "humus"]
   end
+
+  it "should serialize objects that respond to to_tokyo_tyrant" do
+    class Thing
+      def to_tokyo_tyrant
+        "success"
+      end
+    end
+
+    @db["to_tokyo_tyrant"] = { "thing" => Thing.new }
+    @db["to_tokyo_tyrant"].should == { "thing" => "success" }
+  end
 end
