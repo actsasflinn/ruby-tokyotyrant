@@ -33,9 +33,39 @@ static VALUE mTokyoTyrant_close(VALUE vself){
   return Qtrue;
 }
 
-static VALUE mTokyoTyrant_initialize(int argc, VALUE *argv, VALUE vself){
+static VALUE mTokyoTyrant_connect(VALUE vself){
   VALUE host, port, timeout, retry, server;
   int ecode;
+  TCRDB *db = mTokyoTyrant_getdb(vself);
+
+  host = rb_iv_get(vself, "@host");
+  port = rb_iv_get(vself, "@port");
+  timeout = rb_iv_get(vself, "@timeout");
+  retry = rb_iv_get(vself, "@retry");
+
+  if((!tcrdbtune(db, NUM2DBL(timeout), retry == Qtrue ? RDBTRECON : 0)) ||
+     (!tcrdbopen(db, RSTRING_PTR(host), FIX2INT(port)))){
+    ecode = tcrdbecode(db);
+    rb_raise(eTokyoTyrantError, "open error: %s", tcrdberrmsg(ecode));
+  }
+
+  server = rb_str_new2(tcrdbexpr(db));
+  rb_iv_set(vself, "@server", server);
+
+  return Qtrue;
+}
+
+static VALUE mTokyoTyrant_reconnect(VALUE vself){
+  TCRDB *db = mTokyoTyrant_getdb(vself);
+  if(db->fd != -1) mTokyoTyrant_close(vself);
+  db = tcrdbnew();
+  rb_iv_set(vself, RDBVNDATA, Data_Wrap_Struct(rb_cObject, 0, mTokyoTyrant_free, db));
+
+  return mTokyoTyrant_connect(vself);
+}
+
+static VALUE mTokyoTyrant_initialize(int argc, VALUE *argv, VALUE vself){
+  VALUE host, port, timeout, retry;
   TCRDB *db;
 
   rb_scan_args(argc, argv, "04", &host, &port, &timeout, &retry);
@@ -44,23 +74,15 @@ static VALUE mTokyoTyrant_initialize(int argc, VALUE *argv, VALUE vself){
   if(NIL_P(timeout)) timeout = rb_float_new(0.0);
   if(NIL_P(retry)) retry = Qfalse;
 
-  db = tcrdbnew();
-
-  if((!tcrdbtune(db, timeout, retry == Qtrue ? RDBTRECON : 0)) ||
-     (!tcrdbopen(db, RSTRING_PTR(host), FIX2INT(port)))){
-    ecode = tcrdbecode(db);
-    rb_raise(eTokyoTyrantError, "open error: %s", tcrdberrmsg(ecode));
-  }
-
-  server = rb_str_new2(tcrdbexpr(db));
-  rb_iv_set(vself, "@server", server);
   rb_iv_set(vself, "@host", host);
   rb_iv_set(vself, "@port", port);
   rb_iv_set(vself, "@timeout", timeout);
   rb_iv_set(vself, "@retry", retry);
+
+  db = tcrdbnew();
   rb_iv_set(vself, RDBVNDATA, Data_Wrap_Struct(rb_cObject, 0, mTokyoTyrant_free, db));
 
-  return Qtrue;
+  return mTokyoTyrant_connect(vself);
 }
 
 static VALUE mTokyoTyrant_errmsg(int argc, VALUE *argv, VALUE vself){
@@ -381,6 +403,8 @@ void init_mod(){
   rb_define_const(mTokyoTyrant, "ITKEEP", INT2NUM(RDBITKEEP));
 
   rb_define_private_method(mTokyoTyrant, "initialize", mTokyoTyrant_initialize, -1);
+  rb_define_private_method(mTokyoTyrant, "connect", mTokyoTyrant_connect, 0);
+  rb_define_method(mTokyoTyrant, "reconnect", mTokyoTyrant_reconnect, 0);
   rb_define_method(mTokyoTyrant, "server", mTokyoTyrant_server, 0);
   rb_define_method(mTokyoTyrant, "close", mTokyoTyrant_close, 0);
   rb_define_method(mTokyoTyrant, "errmsg", mTokyoTyrant_errmsg, -1);
