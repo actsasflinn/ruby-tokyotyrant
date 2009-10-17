@@ -6,6 +6,8 @@
 if RUBY_PLATFORM =~ /darwin/
   ENV["RC_ARCHS"] = `uname -m`.chomp if `uname -sr` =~ /^Darwin/
 
+  ENV["RC_ARCHS"] = "x86_64" if RUBY_PLATFORM =~ /darwin10.0/
+
   # On PowerPC the defaults are fine
   ENV["RC_ARCHS"] = '' if `uname -m` =~ /^Power Macintosh/
 end
