@@ -162,6 +162,31 @@ This is not in production but the initial benchmarks are very interesting. Resul
   t.search(:diff, query1, query2)
   # => ["chapter:13:paragraph:4", "chapter:13:paragraph:7", "chapter:13:paragraph:19", "chapter:13:paragraph:27", "chapter:13:paragraph:57", "chapter:13:paragraph:125"]
 
+=== Parallel Querying (Take that scalability!)
+
+  require 'tokyo_tyrant'
+  require 'faker'
+  tyrants = { 1 => TokyoTyrant::Table.new('127.0.0.1', 1978),
+              2 => TokyoTyrant::Table.new('127.0.0.1', 1979) }
+
+  # dummy data
+  tyrants.each{ |account_id, table|
+    table.clear
+    20.times do |i|
+      table["#{account_id}/#{i}"] = { # consistent hashing would be good here
+        :name => Faker::Company.name,
+        :plan => rand(3),
+      }
+    end
+  }
+
+  queries = tyrants.collect{ |account_id, table|
+    table.prepare_query{ |q| q.condition 'plan', :numlt, '1' }
+  }
+
+  TokyoTyrant::Query.parallel_search(*queries).collect{ |r| {r[""] => r["name"]} }
+  # => [{"1/3"=>"Zemlak-Jerde"}, {"1/6"=>"O'Conner-Batz"}, {"1/9"=>"Kutch, Erdman and Aufderhar"}, {"1/11"=>"Bartoletti, Armstrong and Barrows"}, {"1/12"=>"Ferry-Dicki"}, {"2/0"=>"Schultz-O'Hara"}, {"2/1"=>"Emmerich, Feest and Huels"}, {"2/2"=>"Borer and Sons"}, {"2/3"=>"D'Amore Inc"}, {"2/5"=>"Koch and Sons"}, {"2/8"=>"Schaefer Group"}, {"2/11"=>"Stroman, Toy and Abernathy"}, {"2/19"=>"Gaylord, Reinger and White"}]
+
 === Lua Extension
 
   # ttserver -ext spec/ext.lua 

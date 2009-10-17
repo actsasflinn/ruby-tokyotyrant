@@ -151,6 +151,34 @@ static VALUE cQuery_hint(VALUE vself){
   return rb_str_new2(tcrdbqryhint(qry));
 }
 
+static VALUE mQuery_parasearch(int argc, VALUE *argv, VALUE vself){
+  VALUE vqrys, vary, vcols;
+  TCMAP *cols;
+  int j, rsiz;
+
+  rb_scan_args(argc, argv, "*", &vqrys);
+
+  RDBQRY *qrys[argc];
+
+  for(j = 0; j < argc; j++){
+    VALUE vqry = rb_iv_get(rb_ary_entry(vqrys, j), RDBQRYVNDATA);
+    Data_Get_Struct(vqry, RDBQRY, qrys[j]);
+  }
+  TCLIST *res = tcrdbparasearch(qrys, argc);
+
+  rsiz = tclistnum(res);
+  vary = rb_ary_new2(rsiz);
+  for(j = 0; j < rsiz; j++){
+    cols = tcrdbqryrescols(res, j);
+    vcols = maptovhash(cols);
+    tcmapdel(cols);
+    rb_ary_push(vary, vcols);
+  }
+  tclistdel(res);
+
+  return vary;
+}
+
 void init_query(){
   rb_define_const(cQuery, "CSTREQ", INT2NUM(RDBQCSTREQ));
   rb_define_const(cQuery, "CSTRINC", INT2NUM(RDBQCSTRINC));
@@ -194,4 +222,5 @@ void init_query(){
   rb_define_method(cQuery, "set_pkey", cQuery_set_pkey, 1);
   rb_define_alias(cQuery, "pkey=", "set_pkey");
   rb_define_method(cQuery, "hint", cQuery_hint, 0);
+  rb_define_module_function(cQuery, "parallel_search", mQuery_parasearch, -1);
 }

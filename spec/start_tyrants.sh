@@ -21,8 +21,16 @@ ttserver \
 ttserver \
   -dmn \
   -port 45001 \
-  -pid $TMP/tt_spec.pid -rts $TMP/tt_spec.rts \
-  -log $TMP/tt.log \
+  -pid $TMP/tt1_spec.pid -rts $TMP/tt1_spec.rts \
+  -log $TMP/tt1.log \
   -ext $SPEC/ext.lua \
-  $TMP/tyrant_table.tct
+  $TMP/tyrant_table1.tct
+
+ttserver \
+  -dmn \
+  -port 45002 \
+  -pid $TMP/tt2_spec.pid -rts $TMP/tt2_spec.rts \
+  -log $TMP/tt2.log \
+  -ext $SPEC/ext.lua \
+  $TMP/tyrant_table2.tct
 

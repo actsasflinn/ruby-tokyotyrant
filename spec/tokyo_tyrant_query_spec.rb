@@ -2,10 +2,12 @@ require 'pathname'
 require Pathname(__FILE__).dirname.join('spec_base') unless $root
 
 describe TokyoTyrant::Query, "with an open database" do
-  @db = TokyoTyrant::Table.new('127.0.0.1', 45001)
-  @db.clear
-  load('spec/plu_db.rb')
-  @db.mput($codes)
+  before do
+    @db = TokyoTyrant::Table.new('127.0.0.1', 45001)
+    @db.clear
+    load('spec/plu_db.rb') unless $codes
+    @db.mput($codes)
+  end
 
   it "should get a query object" do
     @db.query.class.should == TokyoTyrant::Query
@@ -129,5 +131,29 @@ describe TokyoTyrant::Query, "with an open database" do
     q.limit(3)
     q.run
     q.hint.should == "\nusing an index: \"type\" asc (STREQ)\nresult set size: 5\nsorting the result set: \"code\"\n"
+  end
+
+  it "should query multiple servers" do
+    servers = { 1 => TokyoTyrant::Table.new('127.0.0.1', 45001),
+                2 => TokyoTyrant::Table.new('127.0.0.1', 45002) }
+
+    # dummy data
+    servers.each do |account_id, server|
+      server.clear
+      server["#{account_id}/1"] = {
+        :name => "Test 1 (#{account_id})",
+        :id => 1,
+      }
+      server["#{account_id}/2"] = {
+        :name => "Test 2 (#{account_id})",
+        :id => 2,
+      }
+    end
+    ones = proc{ |q| q.add_condition :id, :numeq, 1 }
+    queries = servers.collect{ |account_id,server| server.prepare_query(&ones) }
+    results = TokyoTyrant::Query.parallel_search(*queries)
+    expected = [{ "" => "1/1", "name" => "Test 1 (1)", "id" => "1" },
+                { "" => "2/1", "name" => "Test 1 (2)", "id" => "1" }]
+    results.should == expected
   end
 end
