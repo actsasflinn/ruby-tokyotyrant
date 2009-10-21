@@ -438,7 +438,7 @@ void init_mod(){
   rb_define_alias(mTokyoTyrant, "clear", "vanish");
   rb_define_method(mTokyoTyrant, "copy", mTokyoTyrant_copy, 1);
   rb_define_method(mTokyoTyrant, "restore", mTokyoTyrant_restore, 2);
-  rb_define_method(mTokyoTyrant, "setmst", mTokyoTyrant_setmst, 2);
+  rb_define_method(mTokyoTyrant, "setmst", mTokyoTyrant_setmst, 4);
   rb_define_method(mTokyoTyrant, "rnum", mTokyoTyrant_rnum, 0);
   rb_define_alias(mTokyoTyrant, "count", "rnum");
   rb_define_method(mTokyoTyrant, "empty?", mTokyoTyrant_empty, 0);
