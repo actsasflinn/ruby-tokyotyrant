@@ -197,6 +197,32 @@ This is not in production but the initial benchmarks are very interesting. Resul
   t.run(:echo, 'hello', 'world')
   # => "hello\tworld"
 
+=== Balanced Nodes with Consistent Hashing
+
+  # usage is similar to single node
+  require 'tokyo_tyrant/balancer'
+
+  servers = ['127.0.0.1:1978',
+             '127.0.0.1:1979',
+             '127.0.0.1:1980',
+             '127.0.0.1:1981']
+
+  tb = TokyoTyrant::Balancer::Table.new(servers)
+
+  # store server is determined by key which is consistent
+  tb[:foo] = { 'foo' => 'bar' }
+  tb[:bar] = { 'bar' => 'baz' }
+
+  # retrieval server is determined by key which is consistent
+  tb[:foo]
+  # => { 'foo' => 'bar' }
+
+  # aggregate from all nodes
+  tb.size
+
+  # parallel_search based querying across all nodes
+  tb.find{ |q| q.condition(:foo, :streq, 'bar') }
+
 == Contributors
 
 * Flinn Mueller (actsasflinn) author/maintainer
