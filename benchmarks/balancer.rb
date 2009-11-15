@@ -1,0 +1,101 @@
+require 'benchmark'
+require 'rubygems'
+require 'faker'
+require 'date'
+
+#
+# the data
+#
+ 
+colnames = %w{ name sex birthday divisions }
+ 
+$year = (1909 .. 2009).to_a
+$month = (1..12).to_a
+$day = (1..28).to_a # not bothering with month diffs
+ 
+def rbdate
+  DateTime.new($year[rand($year.size)], $month[rand($month.size)], $day[rand($day.size)])
+end
+ 
+def rdiv
+  case rand(3)
+  when 0
+    'dev'
+  when 1
+    'brd'
+  else
+    'brd,dev'
+  end
+end
+ 
+def rgen
+  (rand(2) == 1 ? 'male' : 'female')
+end
+ 
+data = [
+  [ 'Alphonse Armalite', 'male', DateTime.new(1972, 10, 14), 'brd,dev' ],
+  [ 'Brutus Beromunster', 'male', DateTime.new(1964, 07, 14), 'dev' ],
+  [ 'Crystel Chucknorris', 'female', DateTime.new(1980, 07, 12), 'brd' ],
+  [ 'Desree Dylan', 'female', DateTime.new(1954, 07, 13), 'brd,dev' ]
+]
+ 
+10_000.times do |i|
+  data << [ Faker::Name.name, rgen, rbdate, rdiv]  
+end
+ 
+$find_name_list = []
+100.times { $find_name_list << data[rand(data.size)][0] }
+ 
+data.collect! { |e|
+  (0..colnames.length - 1).inject({}) { |h, i| h[colnames[i]] = e[i]; h }
+}
+
+data_h = {}
+i = 0
+data1 = data.collect { |e|
+  i = i + 1
+  h = e.dup
+  h['birthday'] = h['birthday'].to_s
+  data_h[i.to_s] = h
+  h
+}
+
+require 'tokyo_tyrant'
+
+t = TokyoTyrant::Table.new('127.0.0.1', 45001)
+t.clear
+
+2.times { puts }
+puts 'TokyoTyrant Single'
+
+Benchmark.benchmark(' ' * 20 + Benchmark::Tms::CAPTION, 20) do |b|
+  b.report('inserting data') do
+    data1.each_with_index { |e, i| t[i.to_s] = e }
+  end
+
+  b.report('reading data') do
+    data1.each_with_index { |e, i| nothing = t[i.to_s] }
+  end
+end
+
+require 'lib/tokyo_tyrant/balancer'
+
+servers = ['127.0.0.1:45001',
+           '127.0.0.1:45002',
+           '127.0.0.1:45003']
+
+tb = TokyoTyrant::Balancer::Table.new(servers)
+tb.clear
+
+2.times { puts }
+puts 'TokyoTyrant Balancer'
+
+Benchmark.benchmark(' ' * 20 + Benchmark::Tms::CAPTION, 20) do |b|
+  b.report('inserting data') do
+    data1.each_with_index { |e, i| tb[i.to_s] = e }
+  end
+
+  b.report('reading data') do
+    data1.each_with_index { |e, i| nothing = tb[i.to_s] }
+  end
+end
