@@ -1,5 +1,6 @@
-require 'fast_hash_ring'
 require 'tokyo_tyrant'
+# require 'hash_ring'
+require 'fast_hash_ring'
 
 module TokyoTyrant
   module Balancer
@@ -10,6 +11,7 @@ module TokyoTyrant
           klass.new(host, port.to_i)
         end
         @servers = servers
+        # @ring = HashRing.new(servers, weights)
         @ring = FastHashRing.new(servers, weights)
       end
 
@@ -46,7 +48,7 @@ module TokyoTyrant
 
       def add_double(key, i = 1.0)
         db = db_for_key(key)
-        db.add_int(key, i)
+        db.add_double(key, i)
       end
       alias :adddouble :add_double
 
@@ -98,6 +100,10 @@ module TokyoTyrant
       alias :delete :out
 
       # Aggregate Methods
+      def close
+        @servers.all?{ |server| server.close }
+      end
+
       def rnum
         @servers.collect{ |server| server.rnum }.inject(nil){ |sum,x| sum ? sum+x : x }
       end
@@ -110,7 +116,7 @@ module TokyoTyrant
       end
 
       def vanish
-        @servers.each{ |server| server.vanish }
+        @servers.all?{ |server| server.vanish }
       end
       alias :clear :vanish
 
@@ -118,8 +124,8 @@ module TokyoTyrant
         @servers.each{ |server| server.sync }
       end
 
-      def optimize
-        @servers.each{ |server| server.optimize }
+      def optimize(*args)
+        @servers.all?{ |server| server.optimize(*args) }
       end
 
       def check(key)
@@ -130,8 +136,17 @@ module TokyoTyrant
       alias :include? :check
       alias :member?  :check
 
+      def set_index(name, type)
+        @servers.all?{ |server| server.set_index(name, type) }
+      end
+
+      def fwmkeys(prefix, max = -1)
+        @servers.collect{ |server| server.fwmkeys(prefix, max) }.flatten
+      end
+
       def delete_keys_with_prefix(prefix, max = -1)
         @servers.each{ |server| server.delete_keys_with_prefix(prefix, max) }
+        nil
       end
       alias :dfwmkeys :delete_keys_with_prefix
 
