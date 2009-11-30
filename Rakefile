@@ -20,7 +20,7 @@ CLEAN.include('pkg', 'tmp')
 
 gemspec = Gem::Specification.new do |s|
   s.name = 'ruby-tokyotyrant'
-  s.version = '0.3.1'
+  s.version = '0.4'
   s.authors = [ 'Flinn' ]
   s.email = 'flinn@actsasflinn.com'
   s.homepage = 'http://github.com/actsasflinn/ruby-tokyotyrant/'
@@ -35,9 +35,12 @@ gemspec = Gem::Specification.new do |s|
              'Rakefile',
              'README.rdoc'] +
              Dir['ext/**/*.[rb|c|h]'] +
+             Dir['lib/**/*.rb'] +
              Dir['spec/**/*'] +
              Dir['benchmarks/**/*']
   s.extensions << "ext/extconf.rb"
+
+  s.add_runtime_dependency('fast_hash_ring', '>= 0.1.1')
 end
 
 task :gemspec do
@@ -50,13 +53,14 @@ Rake::GemPackageTask.new(gemspec) do |pkg|
   pkg.need_tar = true
 end
 
-Rake::PackageTask.new('ruby-tokyotyrant', '0.1') do |pkg|
+Rake::PackageTask.new('ruby-tokyotyrant', '0.4') do |pkg|
   pkg.need_zip = true
   pkg.package_files = FileList[
     'COPYING',
     'Rakefile',
     'README.rdoc',
     'ext/**/*',
+    'lib/**/*.[rb]',
     'spec/**/*',
     'benchmarks/**/*'
   ].to_a
