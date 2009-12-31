@@ -6,9 +6,7 @@ This is a c extension for Ruby to access TokyoTyrant databases.  It currently su
 
   # install tokyocabinet (1.4.34) and tokyotyrant (requires 1.1.35)
   # after installing tc and tt on linux I had to /sbin/ldconfig (as root)
-  sudo gem install gemcutter
-  sudo gem tumble
-  sudo gem install ruby-tokyotyrant
+  sudo gem install ruby-tokyotyrant --source=http://gemcutter.org
 
 == Performance
 
