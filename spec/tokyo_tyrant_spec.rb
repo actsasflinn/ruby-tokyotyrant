@@ -1,6 +1,16 @@
 require 'pathname'
 require Pathname(__FILE__).dirname.join('spec_base') unless $root
 
+describe TokyoTyrant::DB, "with an erroneous socket path" do
+  it "should throw an error" do
+    begin
+      TokyoTyrant::DB.new('/tmp/no_such_file_for_ruby_tokyo_tyrant', 0)
+    rescue => e
+      e.message.should == "Can't open unix socket: /tmp/no_such_file_for_ruby_tokyo_tyrant"
+    end
+  end
+end
+
 describe TokyoTyrant::DB, "with an open database" do
 
   before do

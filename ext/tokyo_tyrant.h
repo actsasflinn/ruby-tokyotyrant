@@ -6,6 +6,8 @@
 #include <math.h>
 #include <time.h>
 #include <locale.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <tcrdb.h>
 #include <tokyo_tyrant_module.h>
 #include <tokyo_tyrant_db.h>

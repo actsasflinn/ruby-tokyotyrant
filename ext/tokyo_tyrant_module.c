@@ -34,23 +34,30 @@ static VALUE mTokyoTyrant_close(VALUE vself){
 }
 
 static VALUE mTokyoTyrant_connect(VALUE vself){
-  VALUE host, port, timeout, retry, server;
-  int ecode;
+  VALUE vhost, vport, vtimeout, vretry, vserver;
+  int ecode, port;
+  char *host;
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
-  host = rb_iv_get(vself, "@host");
-  port = rb_iv_get(vself, "@port");
-  timeout = rb_iv_get(vself, "@timeout");
-  retry = rb_iv_get(vself, "@retry");
+  vhost = rb_iv_get(vself, "@host");
+  vport = rb_iv_get(vself, "@port");
+  vtimeout = rb_iv_get(vself, "@timeout");
+  vretry = rb_iv_get(vself, "@retry");
+  host = RSTRING_PTR(vhost);
+  port = FIX2INT(vport);
 
-  if((!tcrdbtune(db, NUM2DBL(timeout), retry == Qtrue ? RDBTRECON : 0)) ||
-     (!tcrdbopen(db, RSTRING_PTR(host), FIX2INT(port)))){
+  if(port == 0 && access(host, R_OK) < 0 && access(host, W_OK) < 0){
+    rb_raise(rb_eArgError, "Can't open unix socket: %s", host);
+  }
+
+  if((!tcrdbtune(db, NUM2DBL(vtimeout), vretry == Qtrue ? RDBTRECON : 0)) ||
+     (!tcrdbopen(db, host, port))){
     ecode = tcrdbecode(db);
     rb_raise(eTokyoTyrantError, "open error: %s", tcrdberrmsg(ecode));
   }
 
-  server = rb_str_new2(tcrdbexpr(db));
-  rb_iv_set(vself, "@server", server);
+  vserver = rb_str_new2(tcrdbexpr(db));
+  rb_iv_set(vself, "@server", vserver);
 
   return Qtrue;
 }
