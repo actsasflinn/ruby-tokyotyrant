@@ -359,9 +359,14 @@ static VALUE mTokyoTyrant_misc(int argc, VALUE *argv, VALUE vself){
   args = varytolist(vargs);
   vname = StringValueEx(vname);
 
-  list = tcrdbmisc(db, RSTRING_PTR(vname), NUM2INT(vopts), args);
-  vary = listtovary(list);
-  tclistdel(list);
+  if ((list = tcrdbmisc(db, RSTRING_PTR(vname), NUM2INT(vopts), args)) != NULL){
+    vary = listtovary(list);
+    tclistdel(list);
+  } else {
+    vary = rb_ary_new();
+  }
+  tclistdel(args);
+
   return vary;
 }
 

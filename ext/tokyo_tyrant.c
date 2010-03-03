@@ -123,6 +123,33 @@ extern TCLIST *vhashtolist(VALUE vhash){
   return list;
 }
 
+extern TCLIST *vhashtoputlist(VALUE vhash){
+  VALUE vkey, vval, vkeys, vvals;
+  TCLIST *list;
+  int i, j;
+  vkeys = rb_funcall(vhash, rb_intern("keys"), 0);
+  list = tclistnew();
+  for(i = 0; i < RARRAY_LEN(vkeys); i++){
+    vkey = rb_ary_entry(vkeys, i);
+    vkey = StringValueEx(vkey);
+
+    vvals = rb_hash_aref(vhash, vkey);
+    if (TYPE(vvals) == T_ARRAY){
+      for(j = 0; j < RARRAY_LEN(vvals); j++){
+        vval = rb_ary_entry(vvals, j);
+        vval = StringValueEx(vval);
+        tclistpush(list, RSTRING_PTR(vkey), RSTRING_LEN(vkey));
+        tclistpush(list, RSTRING_PTR(vval), RSTRING_LEN(vval));
+      }
+    } else {
+      vval = StringValueEx(vvals);
+      tclistpush(list, RSTRING_PTR(vkey), RSTRING_LEN(vkey));
+      tclistpush(list, RSTRING_PTR(vval), RSTRING_LEN(vval));
+    }
+  }
+  return list;
+}
+
 VALUE mTokyoTyrant;
 VALUE eTokyoTyrantError;
 VALUE cDB;
