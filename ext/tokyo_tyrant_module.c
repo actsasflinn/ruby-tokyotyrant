@@ -6,12 +6,44 @@ extern TCRDB *mTokyoTyrant_getdb(VALUE vself){
   return db;
 }
 
-extern void mTokyoTyrant_exception(VALUE vself){
+extern void mTokyoTyrant_exception(VALUE vself, void *message){
+  VALUE exception;
   int ecode;
   TCRDB *db = mTokyoTyrant_getdb(vself);
+  if (message == NULL) message = "%s";
 
   ecode = tcrdbecode(db);
-  rb_raise(eTokyoTyrantError, tcrdberrmsg(ecode));
+  // Is there a better way to do this?
+  switch(ecode){
+    case TTEINVALID:
+      exception = eTokyoTyrantErrorInvalid;
+      break;
+    case TTENOHOST:
+      exception = eTokyoTyrantErrorNoHost;
+      break;
+    case TTEREFUSED:
+      exception = eTokyoTyrantErrorRefused;
+      break;
+    case TTESEND:
+      exception = eTokyoTyrantErrorSend;
+      break;
+    case TTERECV:
+      exception = eTokyoTyrantErrorReceive;
+      break;
+    case TTEKEEP:
+      exception = eTokyoTyrantErrorKeep;
+      break;
+    case TTENOREC:
+      exception = eTokyoTyrantErrorNoRecord;
+      break;
+    case TTEMISC:
+      exception = eTokyoTyrantErrorMisc;
+      break;
+    default:
+      exception = eTokyoTyrantError;
+      break;
+  }
+  rb_raise(exception, message, tcrdberrmsg(ecode));
 }
 
 static void mTokyoTyrant_free(TCRDB *db){
@@ -23,19 +55,15 @@ static VALUE mTokyoTyrant_server(VALUE vself){
 }
 
 static VALUE mTokyoTyrant_close(VALUE vself){
-  int ecode;
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
-  if(!tcrdbclose(db)){
-    ecode = tcrdbecode(db);
-    rb_raise(eTokyoTyrantError, "close error: %s", tcrdberrmsg(ecode));
-  }
+  if(!tcrdbclose(db)) mTokyoTyrant_exception(vself, "close error: %s");
   return Qtrue;
 }
 
 static VALUE mTokyoTyrant_connect(VALUE vself){
   VALUE vhost, vport, vtimeout, vretry, vserver;
-  int ecode, port;
+  int port;
   char *host;
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
@@ -52,8 +80,7 @@ static VALUE mTokyoTyrant_connect(VALUE vself){
 
   if((!tcrdbtune(db, NUM2DBL(vtimeout), vretry == Qtrue ? RDBTRECON : 0)) ||
      (!tcrdbopen(db, host, port))){
-    ecode = tcrdbecode(db);
-    rb_raise(eTokyoTyrantError, "open error: %s", tcrdberrmsg(ecode));
+    mTokyoTyrant_exception(vself, "open error: %s");
   }
 
   vserver = rb_str_new2(tcrdbexpr(db));

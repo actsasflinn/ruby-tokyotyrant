@@ -25,7 +25,7 @@ static VALUE cDB_put_method(VALUE vself, VALUE vkey, VALUE vstr, int method){
       break;
   }
 
-  if(!res) mTokyoTyrant_exception(vself);
+  if(!res) mTokyoTyrant_exception(vself, NULL);
 
   return Qtrue;
 }
@@ -87,7 +87,7 @@ static VALUE cDB_putshl(VALUE vself, VALUE vkey, VALUE vstr, VALUE vwidth){
 
   res = tcrdbputshl(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), RSTRING_PTR(vstr), RSTRING_LEN(vstr), FIXNUM_P(vwidth));
 
-  if(!res) mTokyoTyrant_exception(vself);
+  if(!res) mTokyoTyrant_exception(vself, NULL);
 
   return Qtrue;
 }
@@ -102,7 +102,7 @@ static VALUE cDB_get(VALUE vself, VALUE vkey){
   vkey = StringValueEx(vkey);
   if(!(buf = tcrdbget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), &bsiz))){
     if ((ecode = tcrdbecode(db))) {
-      if (ecode != TTENOREC) mTokyoTyrant_exception(vself);
+      if (ecode != TTENOREC) mTokyoTyrant_exception(vself, NULL);
     }
     return Qnil;
   } else {

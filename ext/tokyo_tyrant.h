@@ -33,7 +33,17 @@
 #endif
 
 extern VALUE mTokyoTyrant;
+
 extern VALUE eTokyoTyrantError;
+extern VALUE eTokyoTyrantErrorInvalid;
+extern VALUE eTokyoTyrantErrorNoHost;
+extern VALUE eTokyoTyrantErrorRefused;
+extern VALUE eTokyoTyrantErrorSend;
+extern VALUE eTokyoTyrantErrorReceive;
+extern VALUE eTokyoTyrantErrorKeep;
+extern VALUE eTokyoTyrantErrorNoRecord;
+extern VALUE eTokyoTyrantErrorMisc;
+
 extern VALUE cDB;
 extern VALUE cTable;
 extern VALUE cQuery;

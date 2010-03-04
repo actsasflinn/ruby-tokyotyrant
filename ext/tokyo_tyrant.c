@@ -151,14 +151,34 @@ extern TCLIST *vhashtoputlist(VALUE vhash){
 }
 
 VALUE mTokyoTyrant;
+
 VALUE eTokyoTyrantError;
+VALUE eTokyoTyrantErrorInvalid;
+VALUE eTokyoTyrantErrorNoHost;
+VALUE eTokyoTyrantErrorRefused;
+VALUE eTokyoTyrantErrorSend;
+VALUE eTokyoTyrantErrorReceive;
+VALUE eTokyoTyrantErrorKeep;
+VALUE eTokyoTyrantErrorNoRecord;
+VALUE eTokyoTyrantErrorMisc;
+
 VALUE cDB;
 VALUE cTable;
 VALUE cQuery;
 
 void Init_tokyo_tyrant(){
   mTokyoTyrant = rb_define_module("TokyoTyrant");
+
   eTokyoTyrantError = rb_define_class("TokyoTyrantError", rb_eStandardError);
+  eTokyoTyrantErrorInvalid = rb_define_class("TokyoTyrantErrorInvalid", eTokyoTyrantError);
+  eTokyoTyrantErrorNoHost = rb_define_class("TokyoTyrantErrorNoHost", eTokyoTyrantError);
+  eTokyoTyrantErrorRefused = rb_define_class("TokyoTyrantErrorRefused", eTokyoTyrantError);
+  eTokyoTyrantErrorSend = rb_define_class("TokyoTyrantErrorSend", eTokyoTyrantError);
+  eTokyoTyrantErrorReceive = rb_define_class("TokyoTyrantErrorReceive", eTokyoTyrantError);
+  eTokyoTyrantErrorKeep = rb_define_class("TokyoTyrantErrorKeep", eTokyoTyrantError);
+  eTokyoTyrantErrorNoRecord = rb_define_class("TokyoTyrantErrorNoRecord", eTokyoTyrantError);
+  eTokyoTyrantErrorMisc = rb_define_class("TokyoTyrantErrorMisc", eTokyoTyrantError);
+
   init_mod();
 
   cDB = rb_define_class_under(mTokyoTyrant, "DB", rb_cObject);
