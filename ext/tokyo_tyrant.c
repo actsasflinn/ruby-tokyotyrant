@@ -163,6 +163,7 @@ VALUE eTokyoTyrantErrorNoRecord;
 VALUE eTokyoTyrantErrorMisc;
 
 VALUE cDB;
+VALUE cBDB;
 VALUE cTable;
 VALUE cQuery;
 
@@ -184,6 +185,9 @@ void Init_tokyo_tyrant(){
   cDB = rb_define_class_under(mTokyoTyrant, "DB", rb_cObject);
   rb_include_module(cDB, mTokyoTyrant);
   init_db();
+
+  cBDB = rb_define_class_under(mTokyoTyrant, "BDB", cDB);
+  init_bdb();
 
   cTable = rb_define_class_under(mTokyoTyrant, "Table", rb_cObject);
   rb_include_module(cTable, mTokyoTyrant);

@@ -11,6 +11,7 @@
 #include <tcrdb.h>
 #include <tokyo_tyrant_module.h>
 #include <tokyo_tyrant_db.h>
+#include <tokyo_tyrant_bdb.h>
 #include <tokyo_tyrant_table.h>
 #include <tokyo_tyrant_query.h>
 
@@ -45,6 +46,7 @@ extern VALUE eTokyoTyrantErrorNoRecord;
 extern VALUE eTokyoTyrantErrorMisc;
 
 extern VALUE cDB;
+extern VALUE cBDB;
 extern VALUE cTable;
 extern VALUE cQuery;
 

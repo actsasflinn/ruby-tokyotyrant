@@ -34,3 +34,10 @@ ttserver \
   -ext $SPEC/ext.lua \
   $TMP/tyrant_table2.tct
 
+ttserver \
+  -dmn \
+  -port 45003 \
+  -pid $TMP/ttb_spec.pid -rts $TMP/ttb_spec.rts \
+  -log $TMP/ttb.log \
+  -ext $SPEC/ext.lua \
+  $TMP/tyrant.tcb

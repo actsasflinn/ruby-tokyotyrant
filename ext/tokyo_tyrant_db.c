@@ -47,25 +47,6 @@ static VALUE cDB_mput(VALUE vself, VALUE vhash){
   return vary;
 }
 
-static VALUE cDB_putlist(VALUE vself, VALUE vhash){
-  VALUE vary;
-  TCLIST *list, *result;
-  TCRDB *db = mTokyoTyrant_getdb(vself);
-  Check_Type(vhash, T_HASH);
-
-  // need a different vhash to putlist 'k v k v' instead of 'k v v v'
-  list = vhashtoputlist(vhash);
-  if ((result = tcrdbmisc(db, "putlist", 0, list)) != NULL){
-    vary = listtovary(result);
-    tclistdel(result);
-  } else {
-    vary = rb_ary_new();
-  }
-  tclistdel(list);
-
-  return vary;
-}
-
 static VALUE cDB_putkeep(VALUE vself, VALUE vkey, VALUE vstr){
   return cDB_put_method(vself, vkey, vstr, TTPUTKEEP);  
 }
@@ -145,52 +126,6 @@ static VALUE cDB_mget(int argc, VALUE *argv, VALUE vself){
   return vhash;
 }
 
-static VALUE cDB_getlist(int argc, VALUE *argv, VALUE vself){
-  VALUE vkeys, vvalue, vary, vhash, vkey, vval, vvals;
-  TCLIST *list, *result;
-  int i;
-  TCRDB *db = mTokyoTyrant_getdb(vself);
-  rb_scan_args(argc, argv, "*", &vkeys);
-
-  // I really hope there is a better way to do this
-  if (RARRAY_LEN(vkeys) == 1) {
-    vvalue = rb_ary_entry(vkeys, 0);
-    switch (TYPE(vvalue)){
-      case T_STRING:
-      case T_FIXNUM:
-        break;
-      case T_ARRAY:
-        vkeys = vvalue;
-        break;
-      case T_OBJECT:
-        vkeys = rb_convert_type(vvalue, T_ARRAY, "Array", "to_a");
-        break;
-    }
-  }
-  Check_Type(vkeys, T_ARRAY);
-
-  list = varytolist(vkeys);
-  result = tcrdbmisc(db, "getlist", RDBMONOULOG, list);
-  tclistdel(list);
-  vary = listtovary(result);
-  tclistdel(result);
-
-  vhash = rb_hash_new();
-  for(i = 0; i < RARRAY_LEN(vary); i += 2){
-    vkey = rb_ary_entry(vary, i);
-    vval = rb_ary_entry(vary, i + 1);
-    vvals = rb_hash_aref(vhash, vkey);
-    if (TYPE(vvals) == T_ARRAY){
-      vvals = rb_ary_push(vvals, vval);
-    } else {
-      vvals = rb_ary_new();
-      vvals = rb_ary_push(vvals, vval);
-    }
-    rb_hash_aset(vhash, vkey, vvals);
-  }
-  return vhash;
-}
-
 static VALUE cDB_vsiz(VALUE vself, VALUE vkey){
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
@@ -267,7 +202,6 @@ static VALUE cDB_values(VALUE vself){
 void init_db(){
   rb_define_method(cDB, "mput", cDB_mput, 1);
   rb_define_alias(cDB, "lput", "mput");       // Rufus Compat
-  rb_define_method(cDB, "putlist", cDB_putlist, 1);
   rb_define_method(cDB, "put", cDB_put, 2);
   rb_define_alias(cDB, "[]=", "put");
   rb_define_method(cDB, "putkeep", cDB_putkeep, 2);
@@ -278,7 +212,6 @@ void init_db(){
   rb_define_alias(cDB, "[]", "get");
   rb_define_method(cDB, "mget", cDB_mget, -1);
   rb_define_alias(cDB, "lget", "mget");       // Rufus Compat
-  rb_define_method(cDB, "getlist", cDB_getlist, -1);
   rb_define_method(cDB, "vsiz", cDB_vsiz, 1);
   /*
   rb_define_method(cDB, "check_value", cDB_check_value, 1);
