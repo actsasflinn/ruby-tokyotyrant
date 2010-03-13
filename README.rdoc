@@ -45,7 +45,10 @@ This is not in production but the initial benchmarks are very interesting. Resul
   require 'tokyo_tyrant'
   bdb = TokyoTyrant::BDB.new('127.0.0.1', 1978)
 
-  bdb.putlist({ 'foo' => ['bar', 'baz', 'bat']})
+  bdb.putdup('foo', 'bar')
+  # => true
+
+  bdb.putlist({ 'foo' => ['baz', 'bat']})
   # => []
 
   bdb.getlist('foo')

@@ -7,6 +7,17 @@ describe TokyoTyrant::BDB, "with an open database" do
     @db.clear
   end
 
+  it "should put duplicate keys and values" do
+    key = 'desert'
+    values = ['baklava', 'chocolate mousse', 'tiramisu', 'tiramisu']
+    h = { key => values }
+    @db.outlist(key)
+    values.each do |value|
+      @db.putdup(key, value).should.be.true
+    end
+    @db.getlist(h.keys).should == h
+  end
+
   it "should put a list" do
     h = { 'mushrooms' => ['portobello', 'button'] }
     @db.outlist(h.keys)

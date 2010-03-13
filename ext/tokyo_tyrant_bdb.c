@@ -1,5 +1,30 @@
 #include <tokyo_tyrant_bdb.h>
 
+static VALUE cBDB_put_method(VALUE vself, VALUE vkey, VALUE vval, char *command, bool bang){
+  VALUE vres;
+  TCLIST *list, *result;
+  TCRDB *db = mTokyoTyrant_getdb(vself);
+
+  vkey = StringValueEx(vkey);
+  vval = StringValueEx(vval);
+
+  list = tclistnew2(2);
+  tclistpush(list, RSTRING_PTR(vkey), RSTRING_LEN(vkey));
+  tclistpush(list, RSTRING_PTR(vval), RSTRING_LEN(vval));
+  if ((result = tcrdbmisc(db, command, 0, list)) != NULL){
+    if (tclistnum(result) == 0){
+      vres = Qtrue;
+    } else {
+      vres = listtovary(result);
+    }
+  } else {
+    if (bang) mTokyoTyrant_exception(vself, NULL);
+    vres = Qfalse;
+  }
+  tclistdel(list);
+  return vres;
+}
+
 static VALUE cBDB_putlist(VALUE vself, VALUE vhash){
   VALUE vary;
   TCLIST *list, *result;
@@ -93,6 +118,14 @@ static VALUE cBDB_values(VALUE vself){
   return vary;
 }
 
+static VALUE cBDB_putdup(VALUE vself, VALUE vkey, VALUE vval){
+  return cBDB_put_method(vself, vkey, vval, "putdup", false);
+}
+
+static VALUE cBDB_putdup_bang(VALUE vself, VALUE vkey, VALUE vval){
+  return cBDB_put_method(vself, vkey, vval, "putdup", true);
+}
+
 void init_bdb(){
   rb_define_method(cBDB, "putlist", cBDB_putlist, 1);
   rb_define_alias(cBDB, "mput", "putlist");
@@ -100,4 +133,6 @@ void init_bdb(){
   rb_define_alias(cBDB, "mget", "putlist");
   rb_define_method(cBDB, "each", cBDB_each, 0);
   rb_define_method(cBDB, "values", cBDB_values, 0);
+  rb_define_method(cBDB, "putdup", cBDB_putdup, 2);
+  rb_define_method(cBDB, "putdup!", cBDB_putdup_bang, 2);
 }
