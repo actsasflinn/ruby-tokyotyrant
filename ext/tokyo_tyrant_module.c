@@ -372,9 +372,18 @@ static VALUE mTokyoTyrant_size(VALUE vself){
 }
 
 static VALUE mTokyoTyrant_stat(VALUE vself){
+  VALUE vhash;
+  char *stats;
+  TCMAP *map;
   TCRDB *db = mTokyoTyrant_getdb(vself);
+  vhash = rb_hash_new();
 
-  return rb_str_new2(tcrdbstat(db));
+  if ((stats = tcrdbstat(db)) != NULL){
+    map = tcstrsplit3(stats, "\t\n");
+    vhash = maptovhash(map);
+    tcmapdel(map);
+  }
+  return vhash;
 }
 
 static VALUE mTokyoTyrant_misc(int argc, VALUE *argv, VALUE vself){
