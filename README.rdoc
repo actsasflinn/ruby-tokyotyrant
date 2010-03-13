@@ -37,6 +37,25 @@ This is not in production but the initial benchmarks are very interesting. Resul
   db.mput("1"=>"number_1", "2"=>"number_2", "3"=>"number_3", "4"=>"number_4", "5"=>"number_5")
   db.mget(1..3) # => {"1"=>"number_1", "2"=>"number_2", "3"=>"number_3"}
 
+=== B+ Tree DB
+
+  # start tyrant like so:
+  # ttserver example.tcb
+
+  require 'tokyo_tyrant'
+  bdb = TokyoTyrant::BDB.new('127.0.0.1', 1978)
+
+  bdb.putlist({ 'foo' => ['bar', 'baz', 'bat']})
+  # => []
+
+  bdb.getlist('foo')
+  # => {"foo"=>["bar", "baz", "bat"]}
+
+  bdb.each{ |k,v| puts [k, v].inspect }
+  # ["foo", "bar"]
+  # ["foo", "baz"]
+  # ["foo", "bat"]
+
 === Table DB
 
   # start tyrant like so:
