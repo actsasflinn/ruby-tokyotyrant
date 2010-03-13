@@ -382,7 +382,10 @@ static VALUE mTokyoTyrant_misc(int argc, VALUE *argv, VALUE vself){
   TCLIST *list, *args;
   TCRDB *db = mTokyoTyrant_getdb(vself);
   rb_scan_args(argc, argv, "13", &vname, &vopts, &vargs);
+  if (vopts == Qnil) vopts = INT2NUM(0);
+  if (vargs == Qnil) vargs = rb_ary_new();
 
+  Check_Type(vargs, T_ARRAY);
   args = varytolist(vargs);
   vname = StringValueEx(vname);
 
