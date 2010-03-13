@@ -18,10 +18,9 @@ static VALUE cBDB_putlist(VALUE vself, VALUE vhash){
   return vary;
 }
 
-static VALUE cDB_getlist(int argc, VALUE *argv, VALUE vself){
-  VALUE vkeys, vvalue, vary, vhash, vkey, vval, vvals;
+static VALUE cBDB_getlist(int argc, VALUE *argv, VALUE vself){
+  VALUE vkeys, vvalue, vhash;
   TCLIST *list, *result;
-  int i;
   TCRDB *db = mTokyoTyrant_getdb(vself);
   rb_scan_args(argc, argv, "*", &vkeys);
 
@@ -45,26 +44,60 @@ static VALUE cDB_getlist(int argc, VALUE *argv, VALUE vself){
   list = varytolist(vkeys);
   result = tcrdbmisc(db, "getlist", RDBMONOULOG, list);
   tclistdel(list);
-  vary = listtovary(result);
+  vhash = listtovhash(result);
   tclistdel(result);
-
-  vhash = rb_hash_new();
-  for(i = 0; i < RARRAY_LEN(vary); i += 2){
-    vkey = rb_ary_entry(vary, i);
-    vval = rb_ary_entry(vary, i + 1);
-    vvals = rb_hash_aref(vhash, vkey);
-    if (TYPE(vvals) == T_ARRAY){
-      vvals = rb_ary_push(vvals, vval);
-    } else {
-      vvals = rb_ary_new();
-      vvals = rb_ary_push(vvals, vval);
-    }
-    rb_hash_aset(vhash, vkey, vvals);
-  }
   return vhash;
+}
+
+static VALUE cBDB_each(VALUE vself){
+  VALUE vrv;
+  const char *kbuf, *vbuf;
+  int ksiz, vsiz;
+  TCLIST *result;
+  TCRDB *db = mTokyoTyrant_getdb(vself);
+  vrv = Qnil;
+
+  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+
+  tcrdbiterinit(db);
+  tcrdbmisc(db, "iterinit", RDBMONOULOG, tclistnew());
+  while((result = tcrdbmisc(db, "iternext", RDBMONOULOG, tclistnew())) != NULL){
+    if (tclistnum(result) == 2) {
+      kbuf = tclistval(result, 0, &ksiz);
+      vbuf = tclistval(result, 1, &vsiz);
+      vrv = rb_yield_values(2, rb_str_new(kbuf, ksiz), rb_str_new(vbuf, vsiz));
+    }
+    tclistdel(result);
+  }
+  return vrv;
+}
+
+static VALUE cBDB_values(VALUE vself){
+  VALUE vary;
+  const char *vbuf;
+  int vsiz;
+  TCLIST *result;
+  TCRDB *db = mTokyoTyrant_getdb(vself);
+
+  vary = rb_ary_new();
+  tcrdbiterinit(db);
+  tcrdbmisc(db, "iterinit", RDBMONOULOG, tclistnew());
+  while((result = tcrdbmisc(db, "iternext", RDBMONOULOG, tclistnew())) != NULL){
+    if (tclistnum(result) == 2){
+      vbuf = tclistval(result, 1, &vsiz);
+      vary = rb_ary_push(vary, rb_str_new(vbuf, vsiz));
+    }
+    tclistdel(result);
+  }
+
+  return vary;
 }
 
 void init_bdb(){
   rb_define_method(cBDB, "putlist", cBDB_putlist, 1);
-  rb_define_method(cDB, "getlist", cDB_getlist, -1);
+  rb_define_alias(cBDB, "mput", "putlist");
+  rb_define_method(cBDB, "getlist", cBDB_getlist, -1);
+  rb_define_alias(cBDB, "mget", "putlist");
+  rb_define_method(cBDB, "each", cBDB_each, 0);
+  rb_define_method(cBDB, "values", cBDB_values, 0);
 }

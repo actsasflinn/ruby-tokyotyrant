@@ -150,6 +150,27 @@ extern TCLIST *vhashtoputlist(VALUE vhash){
   return list;
 }
 
+extern VALUE listtovhash(TCLIST *list){
+  VALUE vhash, vkey, vval, vvals;
+  const char *key, *val;
+  int i, num, ksiz, vsiz;
+  vhash = rb_hash_new();
+
+  num = tclistnum(list);
+  for(i = 0; i < num; i += 2){
+    key = tclistval(list, i, &ksiz);
+    val = tclistval(list, i + 1, &vsiz);
+    vkey = rb_str_new(key, ksiz);
+    vval = rb_str_new(val, vsiz);
+
+    vvals = rb_hash_aref(vhash, vkey);
+    if (TYPE(vvals) != T_ARRAY) vvals = rb_ary_new();
+    vvals = rb_ary_push(vvals, vval);
+    rb_hash_aset(vhash, vkey, vvals);
+  }
+  return vhash;
+}
+
 VALUE mTokyoTyrant;
 
 VALUE eTokyoTyrantError;

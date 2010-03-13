@@ -59,4 +59,6 @@ extern VALUE maptovhash(TCMAP *map);
 extern TCMAP *varytomap(VALUE vhash);
 extern TCLIST *vhashtolist(VALUE vhash);
 extern TCLIST *vhashtoputlist(VALUE vhash);
+extern VALUE listtovhash(TCLIST *list);
+
 #endif
