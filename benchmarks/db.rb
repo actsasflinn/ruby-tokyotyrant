@@ -1,3 +1,40 @@
+=begin
+Tokyo::Tyrant (Ruby FFI)
+                          user     system      total        real
+inserting data        0.140000   0.180000   0.320000 (  1.208150)
+reading data          0.240000   0.170000   0.410000 (  1.467640)
+
+
+TokyoTyrant::RDB (Ruby)
+                          user     system      total        real
+inserting data        0.300000   0.170000   0.470000 (  1.481900)
+reading data          0.410000   0.210000   0.620000 (  1.705723)
+
+
+TokyoTyrant (C)
+                          user     system      total        real
+inserting data        0.130000   0.170000   0.300000 (  1.251842)
+reading data          0.120000   0.160000   0.280000 (  1.539256)
+
+
+Memcached (C) to Tyrant
+                          user     system      total        real
+inserting data        0.200000   0.150000   0.350000 (  1.814691)
+reading data          0.180000   0.160000   0.340000 (  1.358712)
+
+
+Memcached (C) to Memcached
+                          user     system      total        real
+inserting data        0.190000   0.140000   0.330000 (  1.022183)
+reading data          0.160000   0.140000   0.300000 (  0.908084)
+
+
+MemCache (Ruby)
+                          user     system      total        real
+inserting data        1.200000   0.210000   1.410000 (  2.329328)
+reading data          1.510000   0.220000   1.730000 (  2.721509)
+=end
+
 require 'benchmark'
 require 'rubygems'
 require 'faker'

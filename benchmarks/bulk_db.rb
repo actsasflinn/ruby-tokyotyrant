@@ -1,3 +1,26 @@
+=begin
+Tokyo Tyrant Bulk Operations Benchmark
+
+
+TokyoTyrant::RDB (Ruby) mget
+                          user     system      total        real
+inserting data        7.770000   1.870000   9.640000 ( 12.598373)
+reading data          1.540000   0.250000   1.790000 (  2.290628)
+
+
+TokyoTyrant (c) mput/mget
+                          user     system      total        real
+inserting data        0.020000   0.000000   0.020000 (  0.037996)
+reading data          0.060000   0.010000   0.070000 (  0.120651)
+
+
+Memcached (C) set/get_multi
+                          user     system      total        real
+inserting data*       0.160000   0.140000   0.300000 (  0.884097)
+reading data          0.090000   0.000000   0.090000 (  0.140217)
+* bulk operation not supported
+=end
+
 require 'benchmark'
 require 'rubygems'
 require 'faker'
