@@ -33,6 +33,12 @@ MemCache (Ruby)
                           user     system      total        real
 inserting data        1.200000   0.210000   1.410000 (  2.329328)
 reading data          1.510000   0.220000   1.730000 (  2.721509)
+
+
+Voldemort (Ruby)
+                          user     system      total        real
+inserting data       18.290000   1.050000  19.340000 ( 37.562370)
+reading data          9.040000   0.530000   9.570000 ( 15.145843)
 =end
 
 require 'benchmark'
@@ -149,3 +155,19 @@ Benchmark.benchmark(' ' * 20 + Benchmark::Tms::CAPTION, 20) do |b|
     data.each_with_index { |e, i| nothing = mc.get(i.to_s) }
   end
 end
+
+require 'voldemort-rb'
+vdb = VoldemortClient.new("test", "localhost:6666")
+2.times { puts }
+puts 'Voldemort (Ruby)'
+
+Benchmark.benchmark(' ' * 20 + Benchmark::Tms::CAPTION, 20) do |b|
+  b.report('inserting data') do
+    data.each_with_index { |e, i| vdb.put(i.to_s, e) }
+  end
+
+  b.report('reading data') do
+    data.each_with_index { |e, i| nothing = vdb.get(i.to_s) }
+  end
+end
+
