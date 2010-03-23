@@ -1,18 +1,15 @@
 require 'tokyo_tyrant'
-# require 'hash_ring'
-require 'fast_hash_ring'
 
 module TokyoTyrant
   module Balancer
     class Base
-      def initialize(servers = [], weights = {})
+      def initialize(servers = [])
         servers.collect! do |server|
           host, port = server.split(':')
           klass.new(host, port.to_i)
         end
         @servers = servers
-        # @ring = HashRing.new(servers, weights)
-        @ring = FastHashRing.new(servers, weights)
+        @ring = TokyoTyrant::ConstistentHash.new(servers)
       end
 
       def ring
@@ -24,7 +21,7 @@ module TokyoTyrant
       end
 
       def db_for_key(key)
-        ring.get_node(key)
+        ring.db_for_key(key)
       end
 
       # Delegate Methods

@@ -187,6 +187,7 @@ VALUE cDB;
 VALUE cBDB;
 VALUE cTable;
 VALUE cQuery;
+VALUE cConstistentHash;
 
 void Init_tokyo_tyrant(){
   mTokyoTyrant = rb_define_module("TokyoTyrant");
@@ -216,4 +217,7 @@ void Init_tokyo_tyrant(){
 
   cQuery = rb_define_class_under(mTokyoTyrant, "Query", rb_cObject);
   init_query();
+
+  cConstistentHash = rb_define_class_under(mTokyoTyrant, "ConstistentHash", rb_cObject);
+  init_consistent_hash();
 }

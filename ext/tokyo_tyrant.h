@@ -14,6 +14,7 @@
 #include <tokyo_tyrant_bdb.h>
 #include <tokyo_tyrant_table.h>
 #include <tokyo_tyrant_query.h>
+#include <tokyo_tyrant_consistent_hash.h>
 
 #define RDBVNDATA "@rdb"
 #define RDBQRYVNDATA "@rdbquery"
@@ -49,6 +50,7 @@ extern VALUE cDB;
 extern VALUE cBDB;
 extern VALUE cTable;
 extern VALUE cQuery;
+extern VALUE cConstistentHash;
 
 extern VALUE StringRaw(const char *buf, int bsiz);
 extern VALUE StringValueEx(VALUE vobj);
