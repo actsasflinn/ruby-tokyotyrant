@@ -35,7 +35,7 @@ gemspec = Gem::Specification.new do |s|
              'Rakefile',
              'README.rdoc'] +
              Dir['ext/**/*.[rb|c|h]'] +
-             Dir['lib/**/*.rb'] +
+             Dir['ext/tokyo_tyrant/**/*.rb'] +
              Dir['spec/**/*'] +
              Dir['benchmarks/**/*']
   s.extensions << "ext/extconf.rb"
