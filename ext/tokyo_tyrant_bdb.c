@@ -1,7 +1,7 @@
 #include <tokyo_tyrant_bdb.h>
 
 static VALUE cBDB_put_method(VALUE vself, VALUE vkey, VALUE vval, char *command, bool bang){
-  VALUE vres;
+  VALUE vres = Qfalse;
   TCLIST *list, *result;
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
@@ -17,16 +17,16 @@ static VALUE cBDB_put_method(VALUE vself, VALUE vkey, VALUE vval, char *command,
     } else {
       vres = listtovary(result);
     }
+    tclistdel(result);
   } else {
     if (bang) mTokyoTyrant_exception(vself, NULL);
-    vres = Qfalse;
   }
   tclistdel(list);
   return vres;
 }
 
 static VALUE cBDB_putlist(VALUE vself, VALUE vhash){
-  VALUE vary;
+  VALUE vary = rb_ary_new();
   TCLIST *list, *result;
   TCRDB *db = mTokyoTyrant_getdb(vself);
   Check_Type(vhash, T_HASH);
@@ -35,8 +35,6 @@ static VALUE cBDB_putlist(VALUE vself, VALUE vhash){
   if ((result = tcrdbmisc(db, "putlist", 0, list)) != NULL){
     vary = listtovary(result);
     tclistdel(result);
-  } else {
-    vary = rb_ary_new();
   }
   tclistdel(list);
 
@@ -44,43 +42,44 @@ static VALUE cBDB_putlist(VALUE vself, VALUE vhash){
 }
 
 static VALUE cBDB_getlist(int argc, VALUE *argv, VALUE vself){
-  VALUE vkeys, vvalue, vhash;
+  VALUE vkeys, vval;
+  VALUE vhash = rb_hash_new();
   TCLIST *list, *result;
   TCRDB *db = mTokyoTyrant_getdb(vself);
   rb_scan_args(argc, argv, "*", &vkeys);
 
   // I really hope there is a better way to do this
   if (RARRAY_LEN(vkeys) == 1) {
-    vvalue = rb_ary_entry(vkeys, 0);
-    switch (TYPE(vvalue)){
+    vval = rb_ary_entry(vkeys, 0);
+    switch (TYPE(vval)){
       case T_STRING:
       case T_FIXNUM:
         break;
       case T_ARRAY:
-        vkeys = vvalue;
+        vkeys = vval;
         break;
       case T_OBJECT:
-        vkeys = rb_convert_type(vvalue, T_ARRAY, "Array", "to_a");
+        vkeys = rb_convert_type(vval, T_ARRAY, "Array", "to_a");
         break;
     }
   }
   Check_Type(vkeys, T_ARRAY);
 
   list = varytolist(vkeys);
-  result = tcrdbmisc(db, "getlist", RDBMONOULOG, list);
+  if ((result = tcrdbmisc(db, "getlist", RDBMONOULOG, list)) != NULL){
+    vhash = listtovhash(result);
+    tclistdel(result);
+  }
   tclistdel(list);
-  vhash = listtovhash(result);
-  tclistdel(result);
   return vhash;
 }
 
 static VALUE cBDB_each(VALUE vself){
-  VALUE vrv;
+  VALUE vrv = Qnil;
   const char *kbuf, *vbuf;
   int ksiz, vsiz;
   TCLIST *result;
   TCRDB *db = mTokyoTyrant_getdb(vself);
-  vrv = Qnil;
 
   if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
 
@@ -98,13 +97,12 @@ static VALUE cBDB_each(VALUE vself){
 }
 
 static VALUE cBDB_values(VALUE vself){
-  VALUE vary;
+  VALUE vary = rb_ary_new();
   const char *vbuf;
   int vsiz;
   TCLIST *result;
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
-  vary = rb_ary_new();
   tcrdbiterinit(db);
   tcrdbmisc(db, "iterinit", RDBMONOULOG, tclistnew());
   while((result = tcrdbmisc(db, "iternext", RDBMONOULOG, tclistnew())) != NULL){

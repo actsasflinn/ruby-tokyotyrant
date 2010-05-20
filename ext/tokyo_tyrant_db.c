@@ -35,15 +35,16 @@ static VALUE cDB_put(VALUE vself, VALUE vkey, VALUE vstr){
 }
 
 static VALUE cDB_mput(VALUE vself, VALUE vhash){
-  VALUE vary;
+  VALUE vary = Qnil;
   TCLIST *list, *args;
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
   args = vhashtolist(vhash);
-  list = tcrdbmisc(db, "putlist", 0, args);
-  vary = listtovary(list);
+  if ((list = tcrdbmisc(db, "putlist", 0, args)) != NULL){
+    vary = listtovary(list);
+    tclistdel(list);
+  }
   tclistdel(args);
-  tclistdel(list);
   return vary;
 }
 
@@ -74,45 +75,45 @@ static VALUE cDB_putshl(VALUE vself, VALUE vkey, VALUE vstr, VALUE vwidth){
 }
 
 static VALUE cDB_get(VALUE vself, VALUE vkey){
-  VALUE vval;
+  VALUE vval = Qnil;
   char *buf;
   int bsiz, ecode;
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
   // this is ugly
   vkey = StringValueEx(vkey);
-  if(!(buf = tcrdbget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), &bsiz))){
+  if((buf = tcrdbget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), &bsiz)) == NULL){
     if ((ecode = tcrdbecode(db))) {
       if (ecode != TTENOREC) mTokyoTyrant_exception(vself, NULL);
     }
-    return Qnil;
   } else {
     vval = StringRaw(buf, bsiz);
+    tcfree(buf);
   }
 
-  tcfree(buf);
   return vval;
 }
 
 static VALUE cDB_mget(int argc, VALUE *argv, VALUE vself){
-  VALUE vkeys, vhash, vvalue;
+  VALUE vkeys, vval;
+  VALUE vhash = Qnil;
   TCMAP *recs;
   TCRDB *db = mTokyoTyrant_getdb(vself);
   rb_scan_args(argc, argv, "*", &vkeys);
 
   // I really hope there is a better way to do this
   if (RARRAY_LEN(vkeys) == 1) {
-    vvalue = rb_ary_entry(vkeys, 0);
-    switch (TYPE(vvalue)){
+    vval = rb_ary_entry(vkeys, 0);
+    switch (TYPE(vval)){
       case T_STRING:
       case T_FIXNUM:
         break;
       case T_ARRAY:
-        vkeys = vvalue;
+        vkeys = vval;
         break;
       case T_STRUCT: // range is not a T_STRUCT instead of a T_OBJECT in ruby1.9?
       case T_OBJECT:
-        vkeys = rb_convert_type(vvalue, T_ARRAY, "Array", "to_a");
+        vkeys = rb_convert_type(vval, T_ARRAY, "Array", "to_a");
         break;
     }
   }
@@ -120,8 +121,9 @@ static VALUE cDB_mget(int argc, VALUE *argv, VALUE vself){
   Check_Type(vkeys, T_ARRAY);
 
   recs = varytomap(vkeys);
-  if(!tcrdbget3(db, recs)) return Qnil;
-  vhash = maptovhash(recs);
+  if(tcrdbget3(db, recs)){
+    vhash = maptovhash(recs);
+  }
   tcmapdel(recs);
   return vhash;
 }
@@ -154,11 +156,12 @@ static VALUE cDB_each(VALUE vself){
   tcrdbiterinit(db);
   int ksiz;
   char *kbuf;
+
   while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
-    int vsiz;
-    char *vbuf = tcrdbget(db, kbuf, ksiz, &vsiz);
-    vrv = rb_yield_values(2, rb_str_new2(kbuf), StringRaw(vbuf, vsiz));
-    tcfree(vbuf);
+    VALUE vkey = rb_str_new(kbuf, ksiz);
+    VALUE vval = cDB_get(vself, vkey);
+
+    vrv = rb_yield_values(2, vkey, vval);
     tcfree(kbuf);
   }
   return vrv;
@@ -172,11 +175,12 @@ static VALUE cDB_each_value(VALUE vself){
   tcrdbiterinit(db);
   int ksiz;
   char *kbuf;
+
   while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
-    int vsiz;
-    char *vbuf = tcrdbget(db, kbuf, ksiz, &vsiz);
-    vrv = rb_yield_values(1, StringRaw(vbuf, vsiz));
-    tcfree(vbuf);
+    VALUE vkey = rb_str_new(kbuf, ksiz);
+    VALUE vval = cDB_get(vself, vkey);
+
+    vrv = rb_yield_values(1, vval);
     tcfree(kbuf);
   }
   return vrv;
@@ -189,11 +193,12 @@ static VALUE cDB_values(VALUE vself){
   tcrdbiterinit(db);
   int ksiz;
   char *kbuf;
+
   while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
-    int vsiz;
-    char *vbuf = tcrdbget(db, kbuf, ksiz, &vsiz);
-    rb_ary_push(vary, StringRaw(vbuf, vsiz));
-    tcfree(vbuf);
+    VALUE vkey = rb_str_new(kbuf, ksiz);
+    VALUE vval = cDB_get(vself, vkey);
+
+    rb_ary_push(vary, vval);
     tcfree(kbuf);
   }
   return vary;

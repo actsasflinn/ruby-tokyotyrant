@@ -146,7 +146,8 @@ static VALUE mTokyoTyrant_out(VALUE vself, VALUE vkey){
 
 // TODO: merge out and mout?
 static VALUE mTokyoTyrant_outlist(int argc, VALUE *argv, VALUE vself){
-  VALUE vkeys, vary, vvalue;
+  VALUE vkeys, vvalue;
+  VALUE vary = rb_ary_new();
   TCLIST *list, *result;
   TCRDB *db = mTokyoTyrant_getdb(vself);
   rb_scan_args(argc, argv, "*", &vkeys);
@@ -169,10 +170,11 @@ static VALUE mTokyoTyrant_outlist(int argc, VALUE *argv, VALUE vself){
   Check_Type(vkeys, T_ARRAY);
 
   list = varytolist(vkeys);
-  result = tcrdbmisc(db, "outlist", 0, list);
+  if ((result = tcrdbmisc(db, "outlist", 0, list)) != NULL){
+    vary = listtovary(result);
+    tclistdel(result);
+  }
   tclistdel(list);
-  vary = listtovary(result);
-  tclistdel(result);
   return vary;
 }
 
@@ -190,14 +192,14 @@ static VALUE mTokyoTyrant_iterinit(VALUE vself){
 }
 
 static VALUE mTokyoTyrant_iternext(VALUE vself){
-  VALUE vval;
+  VALUE vval = Qnil;
   char *vbuf;
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
-  if(!(vbuf = tcrdbiternext2(db))) return Qnil;
-  vval = rb_str_new2(vbuf);
-  tcfree(vbuf);
-
+  if((vbuf = tcrdbiternext2(db)) != NULL){
+    vval = rb_str_new2(vbuf);
+    tcfree(vbuf);
+  }
   return vval;
 }
 
@@ -387,7 +389,8 @@ static VALUE mTokyoTyrant_stat(VALUE vself){
 }
 
 static VALUE mTokyoTyrant_misc(int argc, VALUE *argv, VALUE vself){
-  VALUE vname, vopts, vargs, vary;
+  VALUE vname, vopts, vargs;
+  VALUE vary = rb_ary_new();
   TCLIST *list, *args;
   TCRDB *db = mTokyoTyrant_getdb(vself);
   rb_scan_args(argc, argv, "13", &vname, &vopts, &vargs);
@@ -401,38 +404,41 @@ static VALUE mTokyoTyrant_misc(int argc, VALUE *argv, VALUE vself){
   if ((list = tcrdbmisc(db, RSTRING_PTR(vname), NUM2INT(vopts), args)) != NULL){
     vary = listtovary(list);
     tclistdel(list);
-  } else {
-    vary = rb_ary_new();
   }
   tclistdel(args);
 
   return vary;
 }
 
-static VALUE mTokyoTyrant_ext(VALUE vself, VALUE vext, VALUE vkey, VALUE vvalue){
-  int vsiz;
-  char *vbuf;
+static VALUE mTokyoTyrant_ext(VALUE vself, VALUE vext, VALUE vkey, VALUE vval){
+  int rsiz;
+  char *rbuf, *kbuf, *vbuf, *xbuf;
   TCRDB *db = mTokyoTyrant_getdb(vself);
+  VALUE vres = Qnil;
   vext = StringValueEx(vext);
   vkey = StringValueEx(vkey);
-  vvalue = StringValueEx(vvalue);
+  vval = StringValueEx(vval);
+  xbuf = RSTRING_PTR(vext);
+  kbuf = RSTRING_PTR(vkey);
+  vbuf = RSTRING_PTR(vval);
 
-  if(!(vbuf = tcrdbext(db, RSTRING_PTR(vext), 0, RSTRING_PTR(vkey), RSTRING_LEN(vkey), RSTRING_PTR(vvalue), RSTRING_LEN(vvalue), &vsiz))){
-    return Qnil;
-  } else {
-    return rb_str_new(vbuf, vsiz);
+  if((rbuf = tcrdbext(db, xbuf, 0, kbuf, RSTRING_LEN(vkey), vbuf, RSTRING_LEN(vval), &rsiz)) != NULL){
+    vres = rb_str_new(rbuf, rsiz);
+    tcfree(rbuf);
   }
+  return vres;
 }
 
 static VALUE mTokyoTyrant_each_key(VALUE vself){
-  VALUE vrv;
-  char *kxstr;
+  VALUE vrv = Qnil;
+  char *kbuf;
   if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
   TCRDB *db = mTokyoTyrant_getdb(vself);
-  vrv = Qnil;
+
   tcrdbiterinit(db);
-  while((kxstr = tcrdbiternext2(db)) != NULL){
-    vrv = rb_yield_values(1, rb_str_new2(kxstr));
+  while((kbuf = tcrdbiternext2(db)) != NULL){
+    vrv = rb_yield_values(1, rb_str_new2(kbuf));
+    tcfree(kbuf);
   }
   return vrv;
 }

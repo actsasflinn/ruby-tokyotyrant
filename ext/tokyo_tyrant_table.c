@@ -36,7 +36,8 @@ static VALUE cTable_put(VALUE vself, VALUE vkey, VALUE vcols){
 
 static VALUE cTable_mput(VALUE vself, VALUE vhash){
   int i, num, j;
-  VALUE vary, vkeys, vkey, vval;
+  VALUE vkeys, vkey, vval;
+  VALUE vary = Qnil;
   TCLIST *list, *result;
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
@@ -63,10 +64,12 @@ static VALUE cTable_mput(VALUE vself, VALUE vhash){
     tclistdel(cols);
     tcxstrdel(xstr);
   }
-  result = tcrdbmisc(db, "putlist", 0, list);
+
+  if ((result = tcrdbmisc(db, "putlist", 0, list)) != NULL){
+    vary = listtovary(result);
+    tclistdel(result);
+  }
   tclistdel(list);
-  vary = listtovary(result);
-  tclistdel(result);
   return vary;
 }
 
@@ -86,61 +89,61 @@ static VALUE cTable_out(VALUE vself, VALUE vkey){
 }
 
 static VALUE cTable_get(VALUE vself, VALUE vkey){
-  VALUE vcols;
+  VALUE vcols = Qnil;
   int ecode;
   TCMAP *cols;
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
   vkey = StringValueEx(vkey);
-  if(!(cols = tcrdbtblget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey)))){
+  if((cols = tcrdbtblget(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey))) == NULL){
     if ((ecode = tcrdbecode(db))) {
       if (ecode != TTENOREC) mTokyoTyrant_exception(vself, NULL);
     }
-    return Qnil;
   } else {
     vcols = maptovhash(cols);
+    tcmapdel(cols);
   }
-
-  tcmapdel(cols);
   return vcols;
 }
 
 static VALUE cTable_mget(int argc, VALUE *argv, VALUE vself){
   const char *kbuf;
   int ksiz, vsiz;
-  VALUE vkeys, vhash, vcols, vvalue;
+  VALUE vkeys, vcols, vval;
+  VALUE vhash = Qnil;
   TCMAP *recs, *cols;
   TCRDB *db = mTokyoTyrant_getdb(vself);
   rb_scan_args(argc, argv, "*", &vkeys);
 
   // I really hope there is a better way to do this
   if (RARRAY_LEN(vkeys) == 1) {
-    vvalue = rb_ary_entry(vkeys, 0);
-    switch (TYPE(vvalue)){
+    vval = rb_ary_entry(vkeys, 0);
+    switch (TYPE(vval)){
       case T_STRING:
       case T_FIXNUM:
         break;
       case T_ARRAY:
-        vkeys = vvalue;
+        vkeys = vval;
         break;
       case T_STRUCT: // range is not a T_STRUCT instead of a T_OBJECT in ruby1.9?
       case T_OBJECT:
-        vkeys = rb_convert_type(vvalue, T_ARRAY, "Array", "to_a");
+        vkeys = rb_convert_type(vval, T_ARRAY, "Array", "to_a");
         break;
     }
   }
   Check_Type(vkeys, T_ARRAY);
 
   recs = varytomap(vkeys);
-  if(!tcrdbget3(db, recs)) return Qnil;
-  vhash = rb_hash_new();
-  tcmapiterinit(recs);
-  while((kbuf = tcmapiternext(recs, &ksiz)) != NULL){
-    const char *vbuf = tcmapiterval(kbuf, &vsiz);
-    cols = tcstrsplit4(vbuf, vsiz);
-    vcols = maptovhash(cols);
-    tcmapdel(cols);
-    rb_hash_aset(vhash, StringRaw(kbuf, ksiz), vcols);
+  if(tcrdbget3(db, recs)){
+    vhash = rb_hash_new();
+    tcmapiterinit(recs);
+    while((kbuf = tcmapiternext(recs, &ksiz)) != NULL){
+      const char *vbuf = tcmapiterval(kbuf, &vsiz);
+      cols = tcstrsplit4(vbuf, vsiz);
+      vcols = maptovhash(cols);
+      tcmapdel(cols);
+      rb_hash_aset(vhash, StringRaw(kbuf, ksiz), vcols);
+    }
   }
   tcmapdel(recs);
   return vhash;
@@ -177,65 +180,59 @@ static VALUE cTable_fetch(int argc, VALUE *argv, VALUE vself){
     vrv = rb_yield(vkey);
     cTable_put(vself, vkey, vrv);
   }
-
   return vrv;
 }
 
 static VALUE cTable_each(VALUE vself){
-  VALUE vrv;
-  TCMAP *cols;
+  VALUE vrv = Qnil;
   char *kbuf;
   int ksiz;
   if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
   TCRDB *db = mTokyoTyrant_getdb(vself);
-  vrv = Qnil;
+
   tcrdbiterinit(db);
   while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
-    if((cols = tcrdbtblget(db, kbuf, ksiz)) != NULL){
-      vrv = rb_yield_values(2, rb_str_new(kbuf, ksiz), maptovhash(cols));
-      tcmapdel(cols);
-    } else {
-      vrv = rb_yield_values(2, rb_str_new(kbuf, ksiz), Qnil);
-    }
+    VALUE vkey = rb_str_new(kbuf, ksiz);
+    VALUE vval = cTable_get(vself, vkey);
+
+    vrv = rb_yield_values(2, vkey, vval);
     tcfree(kbuf);
   }
   return vrv;
 }
 
 static VALUE cTable_each_value(VALUE vself){
-  VALUE vrv;
-  TCMAP *cols;
+  VALUE vrv = Qnil;
   char *kbuf;
   int ksiz;
   if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
   TCRDB *db = mTokyoTyrant_getdb(vself);
-  vrv = Qnil;
+
   tcrdbiterinit(db);
   while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
-    if((cols = tcrdbtblget(db, kbuf, ksiz)) != NULL){
-      vrv = rb_yield(maptovhash(cols));
-      tcmapdel(cols);
-    } else {
-      vrv = rb_yield(Qnil);
-    }
+    VALUE vkey = rb_str_new(kbuf, ksiz);
+    VALUE vval = cTable_get(vself, vkey);
+
+    vrv = rb_yield_values(1, vval);
     tcfree(kbuf);
   }
   return vrv;
 }
 
 static VALUE cTable_values(VALUE vself){
-  VALUE vary;
-  TCMAP *cols;
-  char *kxstr;
+  VALUE vary = rb_ary_new();;
+  char *kbuf;
   int ksiz;
   TCRDB *db = mTokyoTyrant_getdb(vself);
+
   vary = rb_ary_new2(tcrdbrnum(db));
   tcrdbiterinit(db);
-  while((kxstr = tcrdbiternext(db, &ksiz)) != NULL){
-    cols = tcrdbtblget(db, kxstr, ksiz);
-    rb_ary_push(vary, maptovhash(cols));
-    tcmapdel(cols);
-    tcfree(kxstr);
+  while((kbuf = tcrdbiternext(db, &ksiz)) != NULL){
+    VALUE vkey = rb_str_new(kbuf, ksiz);
+    VALUE vval = cTable_get(vself, vkey);
+
+    rb_ary_push(vary, vval);
+    tcfree(kbuf);
   }
   return vary;
 }
