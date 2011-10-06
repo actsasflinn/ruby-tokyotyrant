@@ -138,7 +138,7 @@ static VALUE cDB_vsiz(VALUE vself, VALUE vkey){
 static VALUE cDB_fetch(int argc, VALUE *argv, VALUE vself){
   VALUE vkey, vrv, vforce;
   rb_scan_args(argc, argv, "11", &vkey, &vforce);
-  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+  if(!rb_block_given_p()) rb_raise(rb_eArgError, "no block given");
   if(vforce == Qnil) vforce = Qfalse;
 
   if(vforce != Qfalse || (vrv = cDB_get(vself, vkey)) == Qnil){
@@ -150,7 +150,7 @@ static VALUE cDB_fetch(int argc, VALUE *argv, VALUE vself){
 
 static VALUE cDB_each(VALUE vself){
   VALUE vrv;
-  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+  if(!rb_block_given_p()) rb_raise(rb_eArgError, "no block given");
   TCRDB *db = mTokyoTyrant_getdb(vself);
   vrv = Qnil;
   tcrdbiterinit(db);
@@ -169,7 +169,7 @@ static VALUE cDB_each(VALUE vself){
 
 static VALUE cDB_each_value(VALUE vself){
   VALUE vrv;
-  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+  if(!rb_block_given_p()) rb_raise(rb_eArgError, "no block given");
   TCRDB *db = mTokyoTyrant_getdb(vself);
   vrv = Qnil;
   tcrdbiterinit(db);
