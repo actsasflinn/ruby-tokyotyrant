@@ -81,7 +81,7 @@ static VALUE cBDB_each(VALUE vself){
   TCLIST *result;
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
-  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+  if(!rb_block_given_p()) rb_raise(rb_eArgError, "no block given");
 
   tcrdbiterinit(db);
   tcrdbmisc(db, "iterinit", RDBMONOULOG, tclistnew());
