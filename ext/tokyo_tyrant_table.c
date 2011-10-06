@@ -171,7 +171,7 @@ static VALUE cTable_genuid(VALUE vself){
 static VALUE cTable_fetch(int argc, VALUE *argv, VALUE vself){
   VALUE vkey, vrv, vforce;
   rb_scan_args(argc, argv, "11", &vkey, &vforce);
-  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+  if(!rb_block_given_p()) rb_raise(rb_eArgError, "no block given");
   if(vforce == Qnil) vforce = Qfalse;
   vkey = StringValueEx(vkey);
 
@@ -187,7 +187,7 @@ static VALUE cTable_each(VALUE vself){
   VALUE vrv = Qnil;
   char *kbuf;
   int ksiz;
-  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+  if(!rb_block_given_p()) rb_raise(rb_eArgError, "no block given");
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
   tcrdbiterinit(db);
@@ -205,7 +205,7 @@ static VALUE cTable_each_value(VALUE vself){
   VALUE vrv = Qnil;
   char *kbuf;
   int ksiz;
-  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+  if(!rb_block_given_p()) rb_raise(rb_eArgError, "no block given");
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
   tcrdbiterinit(db);
