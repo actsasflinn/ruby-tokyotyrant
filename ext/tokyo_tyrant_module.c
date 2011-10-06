@@ -432,7 +432,7 @@ static VALUE mTokyoTyrant_ext(VALUE vself, VALUE vext, VALUE vkey, VALUE vval){
 static VALUE mTokyoTyrant_each_key(VALUE vself){
   VALUE vrv = Qnil;
   char *kbuf;
-  if(rb_block_given_p() != Qtrue) rb_raise(rb_eArgError, "no block given");
+  if(!rb_block_given_p()) rb_raise(rb_eArgError, "no block given");
   TCRDB *db = mTokyoTyrant_getdb(vself);
 
   tcrdbiterinit(db);
