@@ -1,5 +1,8 @@
 #!/usr/bin/env ruby
 
+GEMNAME = 'ruby-tokyotyrant'
+GEMVERSION = '0.5.2'
+
 require 'pathname'
 $root = Pathname(__FILE__).dirname
 
@@ -7,9 +10,9 @@ require 'rubygems'
 require 'rake'
 require 'rake/clean'
 require 'rake/packagetask'
-require 'rake/gempackagetask'
+require 'rubygems/package_task'
 require 'rake/testtask'
-require 'rake/rdoctask'
+require 'rdoc/task'
 
 task :spec do
   load $root.join('spec', 'spec_base.rb')
@@ -19,8 +22,8 @@ task :default => [ :spec ]
 CLEAN.include('pkg', 'tmp')
 
 gemspec = Gem::Specification.new do |s|
-  s.name = 'ruby-tokyotyrant'
-  s.version = '0.5.1'
+  s.name = GEMNAME
+  s.version = GEMVERSION
   s.authors = [ 'Flinn' ]
   s.email = 'flinn@actsasflinn.com'
   s.homepage = 'http://github.com/actsasflinn/ruby-tokyotyrant/'
@@ -42,16 +45,17 @@ gemspec = Gem::Specification.new do |s|
 end
 
 task :gemspec do
-  File.open('ruby-tokyotyrant.gemspec', 'w') do |f|
+  File.open("#{GEMNAME}.gemspec", 'w') do |f|
     f.write(gemspec.to_ruby)
   end
 end
 
-Rake::GemPackageTask.new(gemspec) do |pkg|
+Gem::PackageTask.new(gemspec) do |pkg|
+  pkg.need_zip = true
   pkg.need_tar = true
 end
 
-Rake::PackageTask.new('ruby-tokyotyrant', '0.5') do |pkg|
+Rake::PackageTask.new(GEMNAME, GEMVERSION) do |pkg|
   pkg.need_zip = true
   pkg.package_files = FileList[
     'COPYING',

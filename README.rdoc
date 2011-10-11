@@ -4,9 +4,9 @@ This is a c extension for Ruby to access TokyoTyrant databases.  It currently su
 
 == Install
 
-  # install tokyocabinet (1.4.34) and tokyotyrant (requires 1.1.35)
+  # install tokyocabinet (1.4.47) and tokyotyrant (requires 1.1.41)
   # after installing tc and tt on linux I had to /sbin/ldconfig (as root)
-  sudo gem install ruby-tokyotyrant --source=http://gemcutter.org
+  sudo gem install --no-ri --no-rdoc ruby-tokyotyrant
 
 == Performance
 
@@ -246,6 +246,7 @@ This is not in production but the initial benchmarks are very interesting. Resul
 == Contributors
 
 * Flinn Mueller (actsasflinn) author/maintainer
+* ??? (gottlike) ruby 1.9.2 compatibility
 * Justin Reagor (cheapRoc) specs
 * Seth Yates (sethyates) run method (lua ext)
 * John Mettraux (jmettraux) inspiration (rufus-tokyo)
