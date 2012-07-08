@@ -34,6 +34,16 @@ static VALUE cDB_put(VALUE vself, VALUE vkey, VALUE vstr){
   return cDB_put_method(vself, vkey, vstr, TTPUT);
 }
 
+static VALUE cDB_addint( VALUE vself, VALUE vkey, VALUE vint){
+  int res;
+  TCRDB *db = mTokyoTyrant_getdb(vself);
+
+  vkey = StringValueEx(vkey);
+  res = tcrdbaddint(db, RSTRING_PTR(vkey), RSTRING_LEN(vkey), FIX2INT( vint));
+  return INT2FIX( res );
+}
+
+
 static VALUE cDB_mput(VALUE vself, VALUE vhash){
   VALUE vary = Qnil;
   TCLIST *list, *args;
@@ -212,6 +222,7 @@ void init_db(){
   rb_define_method(cDB, "putkeep", cDB_putkeep, 2);
   rb_define_method(cDB, "putcat", cDB_putcat, 2);
   rb_define_method(cDB, "putshl", cDB_putshl, 3);
+  rb_define_method(cDB, "addint", cDB_addint, 2);
   rb_define_method(cDB, "putnr", cDB_putnr, 2);
   rb_define_method(cDB, "get", cDB_get, 1);
   rb_define_alias(cDB, "[]", "get");
